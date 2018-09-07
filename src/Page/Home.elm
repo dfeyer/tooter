@@ -61,8 +61,12 @@ view model theme =
     }
 
 
-image : List Style -> Maybe String -> Html msg
-image style maybeImage =
+squaredImage : LengthOrAuto compatible -> Maybe String -> Html msg
+squaredImage dimension maybeImage =
+    let
+        style =
+            [ width dimension, height dimension, borderRadius (rem 0.5), property "object-fit" "cover" ]
+    in
     case maybeImage of
         Just imageUrl ->
             img [ src imageUrl, css style ] []
@@ -73,15 +77,15 @@ image style maybeImage =
 
 profileImage : Maybe String -> Html msg
 profileImage maybeImage =
-    image
-        [ width (rem 6), height (rem 6), borderRadius (rem 0.5), property "object-fit" "cover" ]
+    squaredImage
+        (rem 6)
         maybeImage
 
 
 smallProfileImage : Maybe String -> Html msg
 smallProfileImage maybeImage =
-    image
-        [ width (rem 3.5), height (rem 3.5), borderRadius (rem 0.5), property "object-fit" "cover" ]
+    squaredImage
+        (rem 3.5)
         maybeImage
 
 
@@ -140,10 +144,18 @@ viewToot theme {author, content} =
         [ div [ css [ marginRight (rem 1) ] ] [ smallProfileImage author.image ]
         , div []
             [ tootAccount theme author
-            , div [ css [ marginTop (rem 0.25) ] ] [ text content ]
+            , tootContent theme content
             , tootBar theme
             ]
         ]
+
+tootContent : Theme -> String -> Html msg
+tootContent theme content =
+    div [ css [ marginTop (rem 0.25) ] ] [ text content ]
+
+tootMedia : Theme -> String -> Html msg
+tootMedia theme content =
+    div [ css [ marginTop (rem 0.25) ] ] [ ]
 
 tootAccount : Theme -> Account -> Html msg
 tootAccount theme { fullname, identifier } =
