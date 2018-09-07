@@ -2,12 +2,12 @@ module Main exposing (Msg(..), main, update, view)
 
 import Browser
 import Browser.Navigation as Nav
-import ColorPalette exposing (Palette, createColorPalette)
 import Html
 import Html.Styled exposing (Html, button, div, text)
 import Page.Home as Home
 import Page.Problem as Problem
-import Skeleton exposing (Theme, createTheme)
+import Skeleton
+import Theme exposing (Palette, Theme, createTheme)
 import Url
 import Url.Parser as Parser exposing ((</>), Parser, custom, fragment, map, oneOf, s, top)
 
@@ -78,7 +78,7 @@ init _ url key =
     stepUrl url
         { key = key
         , page = NotFound
-        , theme = createTheme createColorPalette
+        , theme = createTheme
         }
 
 

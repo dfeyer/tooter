@@ -26,7 +26,7 @@ repl:
 		@elm repl
 
 format:
-		@elm-format --yes src tests
+		@elm-format --yes src
 
 clean:
 		@rm -Rf ${DIST_DIR}/*
