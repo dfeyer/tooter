@@ -1,4 +1,12 @@
-module Theme exposing (Layout, Palette, Styles, Theme, createTheme, overrideCss)
+module Theme exposing
+    ( Layout
+    , Palette
+    , Styles
+    , Theme
+    , createTheme
+    , headline
+    , overrideCss
+    )
 
 import Css exposing (..)
 import Html.Styled exposing (Attribute)
@@ -38,9 +46,7 @@ type alias Palette =
     , lightText : Color
     , darkText : Color
     , dark : Color
-    , secondary : Color
     , accent : Color
-    , accentLight : Color
     , appBackground : Color
     , lightBackground : Color
     , mediumBackground : Color
@@ -49,16 +55,14 @@ type alias Palette =
 
 createColorPalette : Palette
 createColorPalette =
-    { major = hex "99B898"
+    { major = hex "29BF89"
     , lightText = hex "FFFFFF"
     , darkText = hex "000000"
-    , dark = hex "2A363B"
-    , secondary = hex "FECE8A"
-    , accent = hex "E84A5F"
-    , accentLight = hex "FF847C"
-    , appBackground = rgba 255 255 255 0.8
+    , dark = hex "7E8D85"
+    , accent = hex "0083BB"
+    , appBackground = rgba 255 255 255 0.9
     , lightBackground = hex "FFFFFF"
-    , mediumBackground = hex "F9F9F9"
+    , mediumBackground = hex "E3E3E3"
     }
 
 
@@ -67,10 +71,10 @@ createTheme =
     let
         layout =
             { defaultMargin = rem 1.25
-            , smallMargin = rem 0.75
+            , smallMargin = rem 0.5
             , compactMargin = rem 0.75
             , sidebarWidth = rem 15
-            , secondSidebarWidth = rem 12
+            , secondSidebarWidth = rem 9
             , navigationHeight = rem 3.25
             }
 
@@ -88,6 +92,11 @@ createTheme =
     , layout = layout
     , styles = styles
     }
+
+
+headline : Theme -> Style
+headline theme =
+    Css.batch [ theme.styles.headlineFontFamily, theme.styles.headlineFontWeight ]
 
 
 overrideCss : List Style -> List Style -> Attribute msg

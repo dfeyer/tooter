@@ -7,11 +7,14 @@ module Page.Home exposing
     )
 
 import Css exposing (..)
+import Css.Transitions exposing (easeInOut, transition)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, href, src)
 import Icon exposing (icon)
+import Image exposing (circularProfileImage, profileImage)
 import Skeleton
 import Theme exposing (Theme)
+import Toot exposing (Toot, viewToot)
 
 
 
@@ -61,40 +64,12 @@ view model theme =
     }
 
 
-squaredImage : LengthOrAuto compatible -> Maybe String -> Html msg
-squaredImage dimension maybeImage =
-    let
-        style =
-            [ width dimension, height dimension, borderRadius (rem 0.5), property "object-fit" "cover" ]
-    in
-    case maybeImage of
-        Just imageUrl ->
-            img [ src imageUrl, css style ] []
-
-        Nothing ->
-            div [ css style ] []
-
-
-profileImage : Maybe String -> Html msg
-profileImage maybeImage =
-    squaredImage
-        (rem 6)
-        maybeImage
-
-
-smallProfileImage : Maybe String -> Html msg
-smallProfileImage maybeImage =
-    squaredImage
-        (rem 3.5)
-        maybeImage
-
-
 viewProfile : Theme -> Html msg
 viewProfile theme =
     div
         [ css
             [ flex3 (int 0) (int 0) theme.layout.sidebarWidth
-            , paddingLeft theme.layout.smallMargin
+            , paddingLeft theme.layout.defaultMargin
             ]
         ]
         [ div [ css [ marginBottom (rem 1) ] ] [ profileImage (Just "https://picsum.photos/200/300") ]
@@ -102,8 +77,7 @@ viewProfile theme =
             [ css [ marginBottom (rem 1) ] ]
             [ div
                 [ css
-                    [ theme.styles.headlineFontFamily
-                    , theme.styles.headlineFontWeight
+                    [ Theme.headline theme
                     , fontSize (rem 1.34)
                     ]
                 ]
@@ -123,76 +97,6 @@ viewProfile theme =
         ]
 
 
-type alias Account =
-    { identifier : String
-    , fullname : String
-    , image : Maybe String
-    }
-
-
-type alias Toot =
-    { identifier : String
-    , content : String
-    , author : Account
-    }
-
-
-viewToot : Theme -> Toot -> Html msg
-viewToot theme {author, content} =
-    div
-        [ css [ displayFlex, marginBottom (rem 2) ] ]
-        [ div [ css [ marginRight (rem 1) ] ] [ smallProfileImage author.image ]
-        , div []
-            [ tootAccount theme author
-            , tootContent theme content
-            , tootBar theme
-            ]
-        ]
-
-tootContent : Theme -> String -> Html msg
-tootContent theme content =
-    div [ css [ marginTop (rem 0.25) ] ] [ text content ]
-
-tootMedia : Theme -> String -> Html msg
-tootMedia theme content =
-    div [ css [ marginTop (rem 0.25) ] ] [ ]
-
-tootAccount : Theme -> Account -> Html msg
-tootAccount theme { fullname, identifier } =
-    div []
-        [ span
-            [ css
-                [ theme.styles.headlineFontFamily
-                , theme.styles.headlineFontWeight
-                ]
-            ]
-            [ text fullname ]
-        , span [ css [ opacity (num 0.2) ] ] [ text " | " ]
-        , span
-            [ css
-                [ fontWeight (int 500)
-                , fontSize (rem 0.95)
-                , fontStyle italic
-                ]
-            ]
-            [ text identifier ]
-        ]
-
-tootBar : Theme -> Html msg
-tootBar theme =
-    div
-        [ css [ displayFlex, fontSize (rem 1.2), marginTop (rem 0.35), justifyContent end ] ]
-        [ tootBarLink theme "Send a resonse..." "return-left"
-        , tootBarLink theme "Boost" "refresh"
-        , tootBarLink theme "Add to your favorits" "star-outline"
-        ]
-
-
-tootBarLink : Theme -> String -> String -> Html msg
-tootBarLink theme label iconName =
-    a [ href "#", css [ display block, color theme.colors.darkText, marginLeft (rem 1.5), opacity (num 0.5) ] ] [ icon iconName ]
-
-
 dummyToot : Toot
 dummyToot =
     { identifier = "1"
@@ -207,6 +111,7 @@ viewTimeline theme =
         [ css
             [ flex (int 1)
             , theme.styles.contentSidePadding
+            , marginRight (rem 1)
             ]
         ]
         [ viewToot theme dummyToot
@@ -229,11 +134,80 @@ viewAside : Theme -> Html msg
 viewAside theme =
     div
         [ css
-            [ flex3 (int 0) (int 0) theme.layout.secondSidebarWidth
+            [ position relative
+            , flex3 (int 0) (int 0) theme.layout.secondSidebarWidth
             , paddingLeft theme.layout.smallMargin
+            , marginRight (rem 1)
             ]
         ]
-        [ text "aside" ]
+        [ div []
+            [ div [ css [ Theme.headline theme, fontSize (rem 1.3) ] ] [ text "Who to follow" ]
+            , div [ css [ margin2 theme.layout.defaultMargin (rem 0) ] ]
+                [ asideLink theme "refresh" "Refresh"
+                , asideLink theme "eye" "View all"
+                ]
+            , accountSuggestionList theme
+            ]
+        ]
+
+
+accountSuggestionList : Theme -> Html msg
+accountSuggestionList theme =
+    div []
+        [ accountSuggestion theme (Just "https://picsum.photos/200/300")
+        , accountSuggestion theme (Just "https://picsum.photos/200/300")
+        , accountSuggestion theme (Just "https://picsum.photos/200/300")
+        ]
+
+
+accountSuggestion : Theme -> Maybe String -> Html msg
+accountSuggestion theme maybeImage =
+    div [ css [ marginBottom (rem 1.5) ] ]
+        [ div
+            [ css
+                [ displayFlex
+                , cursor pointer
+                , backgroundColor theme.colors.lightBackground
+                , borderRadius (rem 1.25)
+                , width (rem 8)
+                , height (rem 2)
+                , marginBottom (rem 0.25)
+                , alignItems center
+                , overflow hidden
+                , opacity (num 0.6)
+                , transition
+                    [ Css.Transitions.backgroundColor 180
+                    , Css.Transitions.opacity 220
+                    ]
+                , hover
+                    [ backgroundColor theme.colors.major
+                    , opacity (num 1.0)
+                    ]
+                ]
+            ]
+            [ circularProfileImage maybeImage
+            , span [ css [ marginLeft (rem 0.5) ] ] [ icon "person-add" ]
+            , span [ css [ marginLeft (rem 0.5) ] ] [ text "Add" ]
+            ]
+        , div [ css [ fontSize (pct 90), opacity (num 0.6) ] ]
+            [ div [ css [ Theme.headline theme ] ] [ text "Dominique Feyer" ]
+            , div [ css [ fontSize (pct 90) ] ] [ text "@dfeyer@social.ttree.ch" ]
+            ]
+        ]
+
+
+asideLink : Theme -> String -> String -> Html msg
+asideLink { colors } iconName label =
+    a
+        [ href "#"
+        , css
+            [ display block
+            , fontWeight (int 500)
+            , color colors.accent
+            , textDecoration none
+            ]
+        ]
+        [ icon iconName, span [ css [ marginLeft (rem 0.5) ] ] [ text label ] ]
 
 
 viewContent : Theme -> String -> Html msg

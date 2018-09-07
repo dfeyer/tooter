@@ -13,10 +13,7 @@ icon name =
 iconWithLabel : String -> String -> Html msg
 iconWithLabel name label =
     div
-        [ css
-            [ paddingRight (rem 1.25)
-            ]
-        ]
+        []
         [ icon name
         , span
             [ css

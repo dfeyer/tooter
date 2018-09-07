@@ -12,7 +12,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (class, css, href, id)
 import Html.Styled.Lazy exposing (lazy)
 import Theme exposing (Palette, Theme)
-import Toolbar exposing (iconLink, inversedIconLink, majorIconLink, navigationLink)
+import Toolbar exposing (circularIconLink, iconLink, inversedIconLink, majorIconLink, navigationLink)
 
 
 
@@ -89,6 +89,10 @@ viewWarning warning =
 
 viewHeader : List Segment -> Theme -> Html msg
 viewHeader segments theme =
+    let
+        ni =
+            inversedIconLink theme
+    in
     div
         [ id "header"
         , css
@@ -103,16 +107,17 @@ viewHeader segments theme =
         ]
         [ div
             [ css
-                [ flex3 (int 0) (int 0) theme.layout.sidebarWidth
+                [ displayFlex
+                , flex3 (int 0) (int 0) theme.layout.sidebarWidth
                 , backgroundColor theme.colors.dark
-                , theme.styles.headlineFontFamily
-                , theme.styles.headlineFontWeight
+                , Theme.headline theme
                 , fontSize (rem 1.8)
                 , color theme.colors.lightText
-                , paddingLeft theme.layout.smallMargin
                 ]
             ]
-            [ text "Tooter" ]
+            [ div [ css [ marginLeft theme.layout.defaultMargin ] ] [ text "Tooter" ]
+            , div [ css [ marginLeft auto ] ] [ ni "Menu" "menu" ]
+            ]
         , div
             [ css
                 [ displayFlex
@@ -150,20 +155,19 @@ viewAdvancedNavigation theme =
         n =
             iconLink theme
 
-        ni =
-            inversedIconLink theme
-
         nm =
             majorIconLink theme
+
+        nc =
+            circularIconLink theme
     in
     div
         [ css
             [ displayFlex ]
         ]
         [ n "Direct Messages" "mail"
-        , n "Listes" "list-box"
         , nm "Search" "search"
-        , ni "Menu" "menu"
+        , nc "Create" "flash"
         ]
 
 
