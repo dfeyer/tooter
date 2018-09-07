@@ -1,0 +1,60 @@
+@font-face {
+    font-family: 'Alegreya';
+    src: url('ag-bold-webfont.woff2') format('woff2'),
+    url('ag-bold-webfont.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Alegreya';
+    src: url('ag-bolditalic-webfont.woff2') format('woff2'),
+    url('ag-bolditalic-webfont.woff') format('woff');
+    font-weight: 700;
+    font-style: italic;
+
+}
+
+@font-face {
+    font-family: 'Alegreya';
+    src: url('ag-italic-webfont.woff2') format('woff2'),
+    url('ag-italic-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+
+}
+
+@font-face {
+    font-family: 'Alegreya';
+    src: url('ag-medium-webfont.woff2') format('woff2'),
+    url('ag-medium-webfont.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'Alegreya';
+    src: url('ag-mediumitalic-webfont.woff2') format('woff2'),
+    url('ag-mediumitalic-webfont.woff') format('woff');
+    font-weight: 500;
+    font-style: italic;
+
+}
+
+@font-face {
+    font-family: 'Alegreya';
+    src: url('ag-regular-webfont.woff2') format('woff2'),
+    url('ag-regular-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'Work Sans';
+    src: url('ws-extrabold-webfont.woff2') format('woff2'),
+    url('ws-extrabold-webfont.woff') format('woff');
+    font-weight: 900;
+    font-style: normal;
+}
