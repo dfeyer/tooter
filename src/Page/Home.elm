@@ -72,7 +72,7 @@ viewProfile theme =
             , paddingLeft theme.layout.defaultMargin
             ]
         ]
-        [ div [ css [ marginBottom (rem 1) ] ] [ profileImage (Just "https://picsum.photos/200/300") ]
+        [ div [ css [ marginBottom (rem 1) ] ] [ profileImage (Just "https://picsum.photos/200/300?random") ]
         , div
             [ css [ marginBottom (rem 1) ] ]
             [ div
@@ -101,7 +101,7 @@ dummyToot : Toot
 dummyToot =
     { identifier = "1"
     , content = "@Shaft Je te cache pas que j'ai rendu mon astreinte en partant tout à l'heure et que je suis bien content !"
-    , author = { identifier = "@solimanhindy@social.lovetux.net", fullname = "Soliman Hindy", image = Just "https://picsum.photos/200/300" }
+    , author = { identifier = "@solimanhindy@social.lovetux.net", fullname = "Soliman Hindy", image = Just "https://picsum.photos/200/300?random" }
     }
 
 
@@ -154,9 +154,9 @@ viewAside theme =
 accountSuggestionList : Theme -> Html msg
 accountSuggestionList theme =
     div []
-        [ accountSuggestion theme (Just "https://picsum.photos/200/300")
-        , accountSuggestion theme (Just "https://picsum.photos/200/300")
-        , accountSuggestion theme (Just "https://picsum.photos/200/300")
+        [ accountSuggestion theme (Just "https://picsum.photos/200/300?random")
+        , accountSuggestion theme (Just "https://picsum.photos/200/300?random")
+        , accountSuggestion theme (Just "https://picsum.photos/200/300?random")
         ]
 
 
