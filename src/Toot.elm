@@ -1,6 +1,7 @@
 module Toot exposing (Toot, viewToot)
 
 import Css exposing (..)
+import Css.Transitions exposing (easeInOut, transition)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, href)
 import Icon exposing (icon)
@@ -47,6 +48,16 @@ tootMedia theme content =
 
 tootAccount : Theme -> Account -> Html msg
 tootAccount theme { fullname, identifier } =
+    let
+        splittedIdentifier =
+            String.split "@" identifier |> List.filter (\y -> y /= "")
+
+        username =
+            Maybe.withDefault "" (List.head splittedIdentifier)
+
+        instance =
+            Maybe.withDefault "" (List.reverse splittedIdentifier |> List.head)
+    in
     div []
         [ span
             [ css
@@ -62,7 +73,10 @@ tootAccount theme { fullname, identifier } =
                 , fontStyle italic
                 ]
             ]
-            [ text identifier ]
+            [ span [] [ text username ]
+            , span [ css [ opacity (num 0.4) ] ] [ text "@" ]
+            , span [ css [ opacity (num 0.4) ] ] [ text instance ]
+            ]
         ]
 
 
@@ -78,4 +92,21 @@ tootBar theme =
 
 tootBarLink : Theme -> String -> String -> Html msg
 tootBarLink theme label iconName =
-    a [ href "#", css [ display block, color theme.colors.darkText, marginLeft (rem 1.5), opacity (num 0.5) ] ] [ icon iconName ]
+    a
+        [ href "#"
+        , css
+            [ display block
+            , color theme.colors.darkText
+            , marginLeft (rem 1.5)
+            , opacity (num 0.5)
+            , transition
+                    [ Css.Transitions.opacity 180
+                    , Css.Transitions.transform3 240 0 easeInOut
+                    ]
+            , hover [
+                opacity (int 1)
+                , transforms [ scale 1.2 ]
+            ]
+            ]
+        ]
+        [ icon iconName ]
