@@ -200,7 +200,7 @@ updateAuthProfile model value =
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message model =
+update message ({ auth } as model) =
     case message of
         NoOp ->
             ( model, Cmd.none )
@@ -229,17 +229,16 @@ update message model =
                     ( model, Cmd.none )
 
         SignInRequested { clientId, authorizationEndpoint, scope } ->
-            let
-                auth =
-                    { clientId = clientId
-                    , redirectUri = model.auth.redirectUri
-                    , scope = scope
-                    , state = Just model.auth.state
-                    , url = { authorizationEndpoint | host = model.auth.instance }
-                    }
-            in
             ( model
-            , auth |> OAuth.AuthorizationCode.makeAuthUrl |> Url.toString |> Nav.load
+            , { clientId = clientId
+              , redirectUri = auth.redirectUri
+              , scope = scope
+              , state = Just model.auth.state
+              , url = { authorizationEndpoint | host = auth.instance }
+              }
+                |> OAuth.AuthorizationCode.makeAuthUrl
+                |> Url.toString
+                |> Nav.load
             )
 
         SetInstance value ->
@@ -249,7 +248,7 @@ update message model =
 
         SignOutRequested ->
             ( model
-            , Nav.load (Url.toString model.auth.redirectUri)
+            , Nav.load (Url.toString auth.redirectUri)
             )
 
         GotAccessToken config res ->
@@ -277,7 +276,7 @@ update message model =
 
                 Ok { token } ->
                     ( updateAuthToken model (Just token)
-                    , getUserInfo model config token
+                    , getUserInfo auth config token
                     )
 
         GotUserInfo res ->
@@ -293,22 +292,22 @@ update message model =
                     )
 
 
-getUserInfo : Model -> OAuthConfiguration -> OAuth.Token -> Cmd Msg
-getUserInfo model { profileEndpoint, profileDecoder } token =
+getUserInfo : Auth -> OAuthConfiguration -> OAuth.Token -> Cmd Msg
+getUserInfo auth { profileEndpoint, profileDecoder } token =
     Http.send GotUserInfo <|
         Http.request
             { method = "GET"
             , body = Http.emptyBody
             , headers = OAuth.useToken token []
             , withCredentials = False
-            , url = Url.toString { profileEndpoint | host = model.auth.instance }
+            , url = Url.toString { profileEndpoint | host = auth.instance }
             , expect = Http.expectJson profileDecoder
             , timeout = Nothing
             }
 
 
-getAccessToken : Model -> OAuthConfiguration -> Url -> String -> Cmd Msg
-getAccessToken model ({ clientId, clientSecret, tokenEndpoint } as config) redirectUri code =
+getAccessToken : Auth -> OAuthConfiguration -> Url -> String -> Cmd Msg
+getAccessToken auth ({ clientId, clientSecret, tokenEndpoint } as config) redirectUri code =
     Http.send (GotAccessToken config) <|
         Http.request <|
             OAuth.AuthorizationCode.makeTokenRequest
@@ -317,7 +316,7 @@ getAccessToken model ({ clientId, clientSecret, tokenEndpoint } as config) redir
                     , secret = Just clientSecret
                     }
                 , code = code
-                , url = { tokenEndpoint | host = model.auth.instance }
+                , url = { tokenEndpoint | host = auth.instance }
                 , redirectUri = redirectUri
                 }
 
@@ -358,20 +357,20 @@ stepUrl url model =
 
 
 stepSignIn : Model -> Url.Url -> ( Model, Cmd Msg )
-stepSignIn model url =
+stepSignIn ({ auth } as model) url =
     case OAuth.AuthorizationCode.parseCode url of
         OAuth.AuthorizationCode.Empty ->
             ( model, Cmd.none )
 
         OAuth.AuthorizationCode.Success { code, state } ->
-            if state /= Just model.auth.state then
+            if state /= Just auth.state then
                 ( updateAuthError model (Just "'state' doesn't match, the request has likely been forged by an adversary!")
                 , Cmd.none
                 )
 
             else
                 ( model
-                , getAccessToken model SignIn.configuration model.auth.redirectUri code
+                , getAccessToken auth SignIn.configuration auth.redirectUri code
                 )
 
         OAuth.AuthorizationCode.Error { error, errorDescription } ->
