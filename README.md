@@ -1,13 +1,34 @@
-# Elm project
+# Tooter
+
+This project is a web client for Mastodon, currently a side project to improve
+my personal skills with Elm and explore a bit the fediverse.
+
+*Warning*: This project if a work in progress, please try to avoid connection to
+a public Mastodon instances. For the development, I use a `pleroma` local instance.
+Pleroma is Mastodon alternative, build on the fantastic Elixir/Phoenix stack.
 
 ## Getting started
 
-You need to have [Elm](http://elm-lang.org/) 0.18 installed on your machine.
+First your need to install the required dependencies, including Elm 0.19:
 
-Compile this project with:
+    npm install
 
-    elm make src/Main.elm
+I try to avoid as much as possible Webpack or other complex build chain. So for
+this project back to the good old `Makefile`. Don't even search for some fancy
+CSS, SASS or LESS support ... for the CSS, I use `elm-css`.
 
-Then view it:
+You can build the project with:
 
-    elm reactor
+    make build
+
+For your development setup, you can watch for file changes with:
+
+    make watch
+
+You need to have a nice little binary on your system [entr](http://www.entrproject.org/)
+
+Before openning your browser, please run:
+
+    make serve
+
+Now you can open your browser at `http://localhost:5001`
