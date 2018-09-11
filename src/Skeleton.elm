@@ -1,9 +1,4 @@
-module Skeleton exposing
-    ( Details
-    , Segment
-    , Warning(..)
-    , view
-    )
+module Skeleton exposing (Details, Segment, Warning(..), signInView, view)
 
 import Browser
 import Css exposing (..)
@@ -71,6 +66,29 @@ view toMsg details =
     }
 
 
+signInView : (a -> msg) -> Details a -> Browser.Document msg
+signInView toMsg details =
+    { title =
+        details.title
+    , body =
+        [ toUnstyled
+            (div
+                [ id "app"
+                , css
+                    [ width (rem 65)
+                    , maxWidth (pct 75)
+                    ]
+                ]
+                [ lazy viewWarning details.warning
+                , viewMinimalHeader details.header details.theme
+                , Html.Styled.map toMsg <|
+                    div (id "main" :: [ css details.css ]) details.kids
+                ]
+            )
+        ]
+    }
+
+
 
 -- VIEW WARNING
 
@@ -87,8 +105,8 @@ viewWarning warning =
 -- VIEW HEADER
 
 
-viewHeader : List Segment -> Theme -> Html msg
-viewHeader segments theme =
+headerWrapper : List Segment -> Theme -> { logo : List (Html msg), navigation : List (Html msg) } -> Html msg
+headerWrapper segments theme { logo, navigation } =
     let
         ni =
             inversedIconLink theme
@@ -115,9 +133,7 @@ viewHeader segments theme =
                 , color theme.colors.lightText
                 ]
             ]
-            [ div [ css [ marginLeft theme.layout.defaultMargin ] ] [ text "Tooter" ]
-            , div [ css [ marginLeft auto ] ] [ ni "Menu" "menu" ]
-            ]
+            logo
         , div
             [ css
                 [ displayFlex
@@ -126,10 +142,52 @@ viewHeader segments theme =
                 , fontSize (rem 1.6)
                 ]
             ]
+            navigation
+        ]
+
+
+viewLogo : Theme -> Html msg
+viewLogo theme =
+    a
+        [ href "/"
+        , css
+            [ display block
+            , color theme.colors.lightText
+            , textDecoration none
+            , marginLeft theme.layout.defaultMargin
+            ]
+        ]
+        [ text "Tooter" ]
+
+
+viewHeader : List Segment -> Theme -> Html msg
+viewHeader segments theme =
+    let
+        ni =
+            inversedIconLink theme
+    in
+    headerWrapper segments
+        theme
+        { logo =
+            [ viewLogo theme
+            , div [ css [ marginLeft auto ] ] [ ni "Menu" "menu" ]
+            ]
+        , navigation =
             [ viewTimelineNavigation theme
             , viewAdvancedNavigation theme
             ]
-        ]
+        }
+
+
+viewMinimalHeader : List Segment -> Theme -> Html msg
+viewMinimalHeader segments theme =
+    headerWrapper segments
+        theme
+        { logo =
+            [ viewLogo theme
+            ]
+        , navigation = [ div [ css [ marginLeft (rem 1), fontSize (rem 1.35) ] ] [ text "A web client for your favorits Mastodon instances" ] ]
+        }
 
 
 viewTimelineNavigation : Theme -> Html msg

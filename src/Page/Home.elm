@@ -52,7 +52,7 @@ update msg model =
 
 view : Model -> Theme -> Skeleton.Details msg
 view model theme =
-    { title = "🌎 Home / Tooter"
+    { title = "🌎 " ++ model.title ++ " / Tooter"
     , header = []
     , warning = Skeleton.NoProblems
     , kids = [ viewContent theme model.title ]

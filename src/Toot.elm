@@ -100,13 +100,13 @@ tootBarLink theme label iconName =
             , marginLeft (rem 1.5)
             , opacity (num 0.5)
             , transition
-                    [ Css.Transitions.opacity 180
-                    , Css.Transitions.transform3 240 0 easeInOut
-                    ]
-            , hover [
-                opacity (int 1)
+                [ Css.Transitions.opacity 180
+                , Css.Transitions.transform3 240 0 easeInOut
+                ]
+            , hover
+                [ opacity (int 1)
                 , transforms [ scale 1.2 ]
-            ]
+                ]
             ]
         ]
         [ icon iconName ]

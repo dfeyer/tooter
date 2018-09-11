@@ -1,12 +1,4 @@
-module Theme exposing
-    ( Layout
-    , Palette
-    , Styles
-    , Theme
-    , createTheme
-    , headline
-    , overrideCss
-    )
+module Theme exposing (Layout, Palette, Styles, Theme, createTheme, headline, overrideCss)
 
 import Css exposing (..)
 import Html.Styled exposing (Attribute)
@@ -47,6 +39,7 @@ type alias Palette =
     , darkText : Color
     , dark : Color
     , accent : Color
+    , warning : Color
     , appBackground : Color
     , lightBackground : Color
     , mediumBackground : Color
@@ -60,6 +53,7 @@ createColorPalette =
     , darkText = hex "000000"
     , dark = hex "7E8D85"
     , accent = hex "0083BB"
+    , warning = hex "B60606"
     , appBackground = rgba 255 255 255 0.9
     , lightBackground = hex "FFFFFF"
     , mediumBackground = hex "E3E3E3"
