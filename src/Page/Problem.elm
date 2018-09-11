@@ -1,22 +1,20 @@
-module Page.Problem exposing
-    ( notFound
-    , offline
-    , styles
-    )
+module Page.Problem exposing (notFound, offline, styles)
 
+import Css exposing (..)
 import Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
+import Theme exposing (Theme, headline)
 
 
 
 -- NOT FOUND
 
 
-notFound : List (Html msg)
-notFound =
-    [ div [ style "font-size" "12em" ] [ text "404" ]
-    , div [ style "font-size" "3em" ] [ text "I cannot find this page!" ]
+notFound : Theme -> List (Html msg)
+notFound theme =
+    [ div [ css [ headline theme, fontSize (rem 4) ] ] [ text "404" ]
+    , div [ css [ fontSize (rem 2) ] ] [ text "I cannot find this page!" ]
     ]
 
 

@@ -1,39 +1,38 @@
-module Mastodon.Url
-    exposing
-        ( apps
-        , oauthAuthorize
-        , oauthToken
-        , userAccount
-        , account
-        , accountTimeline
-        , followers
-        , following
-        , status
-        , homeTimeline
-        , publicTimeline
-        , favouriteTimeline
-        , hashtag
-        , mutes
-        , blocks
-        , notifications
-        , relationships
-        , statuses
-        , context
-        , reblog
-        , unreblog
-        , favourite
-        , unfavourite
-        , follow
-        , unfollow
-        , mute
-        , unmute
-        , block
-        , unblock
-        , uploadMedia
-        , streaming
-        , searchAccount
-        , search
-        )
+module Mastodon.Url exposing
+    ( account
+    , accountTimeline
+    , apps
+    , block
+    , blocks
+    , context
+    , favourite
+    , favouriteTimeline
+    , follow
+    , followers
+    , following
+    , hashtag
+    , homeTimeline
+    , mute
+    , mutes
+    , notifications
+    , oauthAuthorize
+    , oauthToken
+    , publicTimeline
+    , reblog
+    , relationships
+    , search
+    , searchAccount
+    , status
+    , statuses
+    , streaming
+    , unblock
+    , unfavourite
+    , unfollow
+    , unmute
+    , unreblog
+    , uploadMedia
+    , userAccount
+    )
 
 import Mastodon.Type exposing (StatusId(..))
 

@@ -1,8 +1,9 @@
-module Skeleton exposing (Details, Segment, Warning(..), signInView, view)
+module Skeleton exposing (Details, Segment, Warning(..), minimalView, view)
 
 import Browser
 import Css exposing (..)
 import Css.Transitions exposing (easeInOut, transition)
+import Document exposing (Document)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (class, css, href, id)
 import Html.Styled.Lazy exposing (lazy)
@@ -41,50 +42,45 @@ type Warning
 -- VIEW
 
 
-view : (a -> msg) -> Details a -> Browser.Document msg
+view : (a -> msg) -> Details a -> Document msg
 view toMsg details =
     { title =
         details.title
     , body =
-        [ toUnstyled
-            (div
-                [ id "app"
-                , css
-                    [ width (rem 65)
-                    , maxWidth (pct 75)
-                    , backgroundColor details.theme.colors.appBackground
-                    ]
+        [ div
+            [ id "app"
+            , css
+                [ width (rem 65)
+                , maxWidth (pct 75)
+                , backgroundColor details.theme.colors.appBackground
                 ]
-                [ lazy viewWarning details.warning
-                , viewHeader details.header details.theme
-                , Html.Styled.map toMsg <|
-                    div (id "main" :: [ css details.css ]) details.kids
-                , viewFooter details.theme
-                ]
-            )
+            ]
+            [ lazy viewWarning details.warning
+            , viewHeader details.header details.theme
+            , Html.Styled.map toMsg <|
+                div (id "main" :: [ css details.css ]) details.kids
+            , viewFooter details.theme
+            ]
         ]
     }
 
 
-signInView : (a -> msg) -> Details a -> Browser.Document msg
-signInView toMsg details =
+minimalView : Details msg -> Document msg
+minimalView details =
     { title =
         details.title
     , body =
-        [ toUnstyled
-            (div
-                [ id "app"
-                , css
-                    [ width (rem 65)
-                    , maxWidth (pct 75)
-                    ]
+        [ div
+            [ id "app"
+            , css
+                [ width (rem 65)
+                , maxWidth (pct 75)
                 ]
-                [ lazy viewWarning details.warning
-                , viewMinimalHeader details.header details.theme
-                , Html.Styled.map toMsg <|
-                    div (id "main" :: [ css details.css ]) details.kids
-                ]
-            )
+            ]
+            [ lazy viewWarning details.warning
+            , viewMinimalHeader details.header details.theme
+            , div (id "main" :: [ css details.css ]) details.kids
+            ]
         ]
     }
 
