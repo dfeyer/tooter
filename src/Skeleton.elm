@@ -197,9 +197,9 @@ viewTimelineNavigation theme =
             [ displayFlex ]
         ]
         [ n "Home" "home"
-        , n "Notifications" "notifications-outline"
-        , n "Local" "paper"
+        , n "Local" "paper-airplane"
         , n "Federated" "planet"
+        , n "Notifications" "ios-bell"
         ]
 
 
@@ -219,7 +219,7 @@ viewAdvancedNavigation theme =
         [ css
             [ displayFlex ]
         ]
-        [ n "Direct Messages" "mail"
+        [ n "Direct Messages" "email-unread"
         , nm "Search" "search"
         , nc "Create" "flash"
         ]

@@ -26,7 +26,11 @@ type alias Toot =
 viewToot : Theme -> Toot -> Html msg
 viewToot theme { author, content } =
     div
-        [ css [ displayFlex, marginBottom (rem 2) ] ]
+        [ css
+            [ displayFlex
+            , marginBottom (rem 2)
+            ]
+        ]
         [ div [ css [ marginRight (rem 1) ] ] [ smallProfileImage author.image ]
         , div []
             [ tootAccount theme author
@@ -84,9 +88,9 @@ tootBar : Theme -> Html msg
 tootBar theme =
     div
         [ css [ displayFlex, fontSize (rem 1.2), marginTop (rem 0.35), justifyContent end ] ]
-        [ tootBarLink theme "Send a resonse..." "return-left"
-        , tootBarLink theme "Boost" "refresh"
-        , tootBarLink theme "Add to your favorits" "star-outline"
+        [ tootBarLink theme "Send a resonse..." "arrow-return-left"
+        , tootBarLink theme "Boost" "loop"
+        , tootBarLink theme "Add to your favorits" "android-star"
         ]
 
 

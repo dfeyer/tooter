@@ -7,7 +7,7 @@ import Html.Styled.Attributes exposing (class, css)
 
 icon : String -> Html msg
 icon name =
-    i [ class ("icon ion-md-" ++ name) ] []
+    i [ class ("ion-" ++ name) ] []
 
 
 iconWithLabel : String -> String -> Html msg
