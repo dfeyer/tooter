@@ -32,3 +32,8 @@ Before openning your browser, please run:
     make serve
 
 Now you can open your browser at `http://localhost:5001`
+
+## Resources
+
+- We found intersting patterns and inspirations in the [Tooty](https://github.com/n1k0/tooty) project.
+- We try to use the vocabulary of the official [Mastodon API](https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md#status)
