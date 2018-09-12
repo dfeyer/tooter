@@ -34,7 +34,7 @@ module Mastodon.Url exposing
     , userAccount
     )
 
-import Mastodon.Type exposing (StatusId(..))
+import Type exposing (StatusId(..))
 
 
 apiPrefix : String

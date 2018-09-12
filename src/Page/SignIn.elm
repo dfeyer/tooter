@@ -10,7 +10,7 @@ import Json.Decode as Json exposing (Decoder)
 import Mastodon.Url
 import OAuth
 import OAuth.AuthorizationCode
-import Page.SignIn.Decoder exposing (accountDecoder)
+import Mastodon.Decoder exposing (accountDecoder)
 import Skeleton
 import Theme exposing (Theme)
 import Type exposing (Auth, OAuthConfiguration, Account)

@@ -11,12 +11,16 @@ import Css.Transitions exposing (easeInOut, transition)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, href, src)
 import Icon exposing (icon)
-import Image exposing (circularAccountImage, accountImage)
+import Image exposing (accountImage, circularAccountImage)
+import Json.Decode as Decode
+import Mastodon.Decoder exposing (statusDecoder)
 import OAuth exposing (Token)
+import RemoteData exposing (RemoteData(..), WebData)
+import Request.Timeline exposing (homeTimeline)
 import Skeleton
 import Theme exposing (Theme)
 import Toot exposing (Toot, viewToot)
-import Type exposing (Auth, Account)
+import Type exposing (Account, Auth, Client, Status)
 
 
 
@@ -25,27 +29,37 @@ import Type exposing (Auth, Account)
 
 type alias Model =
     { title : String
-    , token : Token
-    , account : Account
+    , client : Client
+    , timeline : WebData (List Status)
     }
 
 
-init : Token -> Account -> ( Model, Cmd Msg )
-init token account =
-    ( Model "Welcome on the Fediverse..." token account, Cmd.none )
+init : Client -> ( Model, Cmd Msg )
+init ({ instance, token } as client) =
+    ( Model "Welcome on the Fediverse..." client NotAsked
+    , homeTimeline instance token (Decode.list statusDecoder) |> Cmd.map TimelineUpdated
+    )
 
 
 
 -- UPDATE
 
+
 type Msg
     = NoOp
+    | TimelineUpdated (WebData (List Status))
+
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        TimelineUpdated timeline ->
+            ( { model | timeline = timeline }
+            , Cmd.none
+            )
 
 
 
@@ -213,13 +227,13 @@ asideLink { colors } iconName label =
 
 
 viewContent : Theme -> Model -> Html msg
-viewContent theme {account} =
+viewContent theme { client } =
     div
         [ css
             [ displayFlex
             ]
         ]
-        [ viewAccount theme account
-        , viewTimeline theme account
-        , viewAside theme account
+        [ viewAccount theme client.account
+        , viewTimeline theme client.account
+        , viewAside theme client.account
         ]

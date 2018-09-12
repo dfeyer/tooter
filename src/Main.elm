@@ -1,5 +1,6 @@
 module Main exposing (Msg(..), main, update, view)
 
+import Account
 import Base64
 import Browser
 import Browser.Navigation as Nav exposing (Key, pushUrl)
@@ -23,11 +24,10 @@ import Page.Problem as Problem
 import Page.SignIn as SignIn
 import Page.SignIn.Error
 import Ports
-import Account
 import Skeleton exposing (Details)
 import Theme exposing (Palette, Theme, createTheme)
 import Token
-import Type exposing (Auth, Client, OAuthConfiguration, Account, initAuth, resumeAuth)
+import Type exposing (Account, Auth, Client, OAuthConfiguration, initAuth, resumeAuth)
 import Url exposing (Protocol(..), Url)
 import Url.Parser as Parser exposing ((</>), Parser, custom, fragment, map, oneOf, s, top)
 
@@ -448,7 +448,14 @@ protectedUrl url model token account =
         parser =
             oneOf
                 [ route top
-                    (stepHome model (Home.init token account))
+                    (stepHome model
+                        (Home.init
+                            { instance = model.auth.instance
+                            , token = token
+                            , account = account
+                            }
+                        )
+                    )
                 ]
     in
     case Parser.parse parser url of

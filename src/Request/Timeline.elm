@@ -2,9 +2,9 @@ module Request.Timeline exposing (homeTimeline)
 
 import Http
 import Json.Decode exposing (Decoder)
-import Mastodon.Url exposing (homeTimeline)
+import Mastodon.Url as Api
 import OAuth exposing (Token)
-import RemoteData
+import RemoteData exposing (WebData)
 import Type exposing (Instance)
 import Url exposing (Protocol(..), Url)
 
@@ -24,16 +24,15 @@ url instance path =
     }
 
 
-homeTimeline : Instance -> Token -> (a -> msg) -> Decoder a -> Cmd msg
-homeTimeline instance token msg decoder =
+homeTimeline : Instance -> Token -> Decoder a -> Cmd (WebData a)
+homeTimeline instance token decoder =
     Http.request
         { method = "GET"
         , body = Http.emptyBody
         , headers = OAuth.useToken token []
         , withCredentials = False
-        , url = Url.toString (url instance homeTimeline)
+        , url = Url.toString (url instance Api.homeTimeline)
         , expect = Http.expectJson decoder
         , timeout = Nothing
         }
         |> RemoteData.sendRequest
-        |> Cmd.map msg
