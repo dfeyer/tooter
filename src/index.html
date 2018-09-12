@@ -51,7 +51,7 @@
         return item;
     }
 
-    const randomBytes = fromLocalStorage("randomBytes@implicit", () => {
+    const randomBytes = fromLocalStorage("tooter.auth.randomBytes@authorization-code", () => {
         const buffer = new Uint8Array(256);
         crypto.getRandomValues(buffer);
         return Array

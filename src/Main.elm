@@ -12,7 +12,8 @@ import Html.Styled.Events exposing (onClick)
 import Html.Styled.Lazy exposing (lazy)
 import Http
 import Iso8601
-import Json.Decode as Json
+import Json.Decode as Decode exposing (Decoder)
+import Json.Decode.Pipeline exposing (required)
 import Json.Encode as Encode
 import Mastodon.Url
 import OAuth exposing (Token)
@@ -22,15 +23,19 @@ import Page.Problem as Problem
 import Page.SignIn as SignIn
 import Page.SignIn.Error
 import Ports
+import Profile
 import Skeleton exposing (Details)
 import Theme exposing (Palette, Theme, createTheme)
-import Type exposing (Auth, Client, OAuthConfiguration, Profile, initAuth)
+import Token
+import Type exposing (Auth, Client, OAuthConfiguration, Profile, initAuth, resumeAuth)
 import Url exposing (Protocol(..), Url)
 import Url.Parser as Parser exposing ((</>), Parser, custom, fragment, map, oneOf, s, top)
 
 
 type alias Flags =
-    { randomBytes : String }
+    { randomBytes : String
+    , clients : String
+    }
 
 
 type alias Model =
@@ -132,13 +137,52 @@ signInView theme auth =
 -- INIT
 
 
+type Error
+    = InvalidToken String
+
+
+resumeClient : String -> Result Error (Maybe Client)
+resumeClient clients =
+    case Base64.decode clients of
+        Ok clients_ ->
+            case Decode.decodeString clientListDecoder clients_ of
+                Ok list ->
+                    -- This a workaround to get the first client only
+                    -- we can change this later when we implement
+                    -- multiple instance support
+                    Ok (list |> List.head)
+
+                Err _ ->
+                    Err (InvalidToken "Unable to parse stored profile and token")
+
+        Err _ ->
+            Err (InvalidToken "Unable to decode stored profile and token")
+
+
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init { randomBytes } url key =
+init { randomBytes, clients } url key =
+    let
+        client =
+            resumeClient clients
+
+        auth =
+            case resumeClient clients of
+                Ok maybeClient ->
+                    case maybeClient of
+                        Just c ->
+                            resumeAuth c randomBytes url
+
+                        Nothing ->
+                            initAuth randomBytes url
+
+                Err _ ->
+                    initAuth randomBytes url
+    in
     stepUrl url
         { key = key
         , page = SignIn
         , theme = createTheme
-        , auth = initAuth randomBytes url
+        , auth = auth
         }
 
 
@@ -218,7 +262,7 @@ update message ({ auth } as model) =
         GotAccessToken config res ->
             case res of
                 Err (Http.BadStatus { body }) ->
-                    case Json.decodeString OAuth.AuthorizationCode.defaultAuthenticationErrorDecoder body of
+                    case Decode.decodeString OAuth.AuthorizationCode.defaultAuthenticationErrorDecoder body of
                         Ok { error, errorDescription } ->
                             let
                                 errMsg =
@@ -254,9 +298,10 @@ update message ({ auth } as model) =
                     ( updateAuthProfile model (Just profile)
                     , Cmd.batch
                         [ pushUrl model.key "/"
-                        , case (auth.token) of
+                        , case auth.token of
                             Just token ->
                                 saveClients [ Client auth.instance token profile ]
+
                             _ ->
                                 Cmd.none
                         ]
@@ -371,27 +416,21 @@ clientEncoder client =
     Encode.object
         [ ( "server", Encode.string client.server )
         , ( "token", OAuth.tokenToString client.token |> Encode.string )
-        , ( "profile", profileEncoder client.profile )
+        , ( "profile", Profile.encoder client.profile )
         ]
 
 
-profileEncoder : Profile -> Encode.Value
-profileEncoder profile =
-    Encode.object
-        [ ( "acct", Encode.string profile.acct )
-        , ( "avatar", Encode.string profile.avatar )
-        , ( "created_at", Iso8601.fromTime profile.created_at |> Encode.string )
-        , ( "display_name", Encode.string profile.display_name )
-        , ( "followers_count", Encode.int profile.followers_count )
-        , ( "following_count", Encode.int profile.following_count )
-        , ( "header", Encode.string profile.header )
-        , ( "id", Encode.string profile.id )
-        , ( "locked", Encode.bool profile.locked )
-        , ( "note", Encode.string profile.note )
-        , ( "statuses_count", Encode.int profile.statuses_count )
-        , ( "url", Encode.string profile.url )
-        , ( "username", Encode.string profile.username )
-        ]
+clientDecoder : Decoder Client
+clientDecoder =
+    Decode.succeed Client
+        |> required "server" Decode.string
+        |> required "token" Token.decoder
+        |> required "profile" Profile.decoder
+
+
+clientListDecoder : Decoder (List Client)
+clientListDecoder =
+    Decode.list clientDecoder
 
 
 

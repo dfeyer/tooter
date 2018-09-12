@@ -59,7 +59,7 @@ view model theme =
     { title = "🌎 " ++ model.title ++ " / Tooter"
     , header = []
     , warning = Skeleton.NoProblems
-    , kids = [ viewContent theme model.title ]
+    , kids = [ viewContent theme model ]
     , css =
         [ minHeight (vh 100)
         , paddingTop (rem 2.5)
@@ -68,15 +68,15 @@ view model theme =
     }
 
 
-viewProfile : Theme -> Html msg
-viewProfile theme =
+viewProfile : Theme -> Profile -> Html msg
+viewProfile theme profile =
     div
         [ css
             [ flex3 (int 0) (int 0) theme.layout.sidebarWidth
             , paddingLeft theme.layout.defaultMargin
             ]
         ]
-        [ div [ css [ marginBottom (rem 1) ] ] [ profileImage (Just "https://picsum.photos/200/300?random") ]
+        [ div [ css [ marginBottom (rem 1) ] ] [ profileImage (Just profile.avatar) ]
         , div
             [ css [ marginBottom (rem 1) ] ]
             [ div
@@ -85,7 +85,7 @@ viewProfile theme =
                     , fontSize (rem 1.34)
                     ]
                 ]
-                [ text "Dominique Feyer" ]
+                [ text profile.display_name ]
             , div
                 [ css
                     [ fontWeight (int 500)
@@ -93,11 +93,11 @@ viewProfile theme =
                     , fontStyle italic
                     ]
                 ]
-                [ text "@dfeyer@social.ttree.ch" ]
+                [ text ("@" ++ profile.username) ]
             ]
         , div
             [ css [ width (pct 85) ] ]
-            [ text "Father, co-founder of ttree.ch and medialib.tv, content management expert, devops fanboy, open source contributor, Neos CMS &amp; Flow Framework team member" ]
+            [ text profile.note ]
         ]
 
 
@@ -109,8 +109,8 @@ dummyToot =
     }
 
 
-viewTimeline : Theme -> Html msg
-viewTimeline theme =
+viewTimeline : Theme -> Profile -> Html msg
+viewTimeline theme profile =
     div
         [ css
             [ flex (int 1)
@@ -134,8 +134,8 @@ viewTimeline theme =
         ]
 
 
-viewAside : Theme -> Html msg
-viewAside theme =
+viewAside : Theme -> Profile -> Html msg
+viewAside theme profile =
     div
         [ css
             [ position relative
@@ -214,14 +214,14 @@ asideLink { colors } iconName label =
         [ icon iconName, span [ css [ marginLeft (rem 0.5) ] ] [ text label ] ]
 
 
-viewContent : Theme -> String -> Html msg
-viewContent theme title =
+viewContent : Theme -> Model -> Html msg
+viewContent theme {profile} =
     div
         [ css
             [ displayFlex
             ]
         ]
-        [ viewProfile theme
-        , viewTimeline theme
-        , viewAside theme
+        [ viewProfile theme profile
+        , viewTimeline theme profile
+        , viewAside theme profile
         ]

@@ -1,4 +1,4 @@
-module Type exposing (Auth, Client, OAuthConfiguration, Profile, Server, initAuth)
+module Type exposing (Auth, Client, OAuthConfiguration, Profile, Server, initAuth, resumeAuth)
 
 import Browser.Navigation as Nav exposing (Key)
 import Json.Decode as Json
@@ -23,14 +23,23 @@ type alias Auth =
 
 
 initAuth : String -> Url -> Auth
-initAuth bytes origin =
-    { redirectUri = { origin | query = Nothing, fragment = Nothing }
+initAuth bytes url =
+    { redirectUri = { url | query = Nothing, fragment = Nothing }
     , error = Nothing
     , token = Nothing
     , profile = Nothing
     , state = bytes
     , instance = "social.ttree.docker"
     }
+
+
+resumeAuth : Client -> String -> Url -> Auth
+resumeAuth { server, token, profile } bytes url =
+    let
+        a =
+            initAuth bytes url
+    in
+    { a | instance = server, token = Just token, profile = Just profile }
 
 
 type alias OAuthConfiguration =
