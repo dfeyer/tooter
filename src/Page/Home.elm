@@ -6,6 +6,7 @@ module Page.Home exposing
     , view
     )
 
+import Browser.Navigation exposing (Key, pushUrl)
 import Css exposing (..)
 import Css.Transitions exposing (easeInOut, transition)
 import Html.Styled exposing (..)
@@ -29,6 +30,7 @@ import Type exposing (Account, Auth, Client, Status)
 
 type alias Model =
     { title : String
+    , key : Key
     , client : Client
     , timeline : Timeline
     }
@@ -38,9 +40,9 @@ type alias Timeline =
     WebData (List Status)
 
 
-init : Client -> ( Model, Cmd Msg )
-init ({ instance, token } as client) =
-    ( Model "Welcome on the Fediverse..." client NotAsked
+init : Key -> Client -> ( Model, Cmd Msg )
+init key ({ instance, token } as client) =
+    ( Model "Welcome on the Fediverse..." key client NotAsked
     , homeTimeline instance token (Decode.list statusDecoder) |> Cmd.map TimelineUpdated
     )
 
@@ -51,6 +53,7 @@ init ({ instance, token } as client) =
 
 type Msg
     = NoOp
+    | Navigate String
     | TimelineUpdated (WebData (List Status))
 
 
@@ -59,6 +62,9 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        Navigate href ->
+            ( model, pushUrl model.key href)
 
         TimelineUpdated timeline ->
             ( { model | timeline = timeline }
@@ -70,7 +76,7 @@ update msg model =
 -- VIEW
 
 
-view : Model -> Theme -> Skeleton.Details msg
+view : Model -> Theme -> Skeleton.Details Msg
 view model theme =
     { title = "🌎 " ++ model.title ++ " / Tooter"
     , header = []
@@ -117,7 +123,7 @@ viewAccount theme account =
         ]
 
 
-viewTimeline : Theme -> Timeline -> Html msg
+viewTimeline : Theme -> Timeline -> Html Msg
 viewTimeline theme timeline =
     div
         [ css
@@ -221,7 +227,7 @@ asideLink { colors } iconName label =
         [ icon iconName, span [ css [ marginLeft (rem 0.5) ] ] [ text label ] ]
 
 
-viewContent : Theme -> Model -> Html msg
+viewContent : Theme -> Model -> Html Msg
 viewContent theme { client, timeline } =
     div
         [ css

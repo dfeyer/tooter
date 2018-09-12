@@ -2,15 +2,18 @@ module View.Events exposing
     ( decodePositionInformation
     , onClickInformation
     , onClickWithPrevent
-    , onClickWithPreventAndStop
     , onClickWithStop
     , onInputInformation
     )
 
 import Html.Styled exposing (..)
-import Html.Styled.Events exposing (on, preventDefaultOn)
+import Html.Styled.Events exposing (on, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Decode exposing (Decoder)
 import Type exposing (..)
+
+
+
+-- EVENT : WITH POSITION INFORMATIONS
 
 
 onClickInformation : (InputInformation -> msg) -> Attribute msg
@@ -30,11 +33,8 @@ decodePositionInformation =
         (Decode.at [ "target", "selectionStart" ] Decode.int)
 
 
-onClickWithPreventAndStop : msg -> Attribute msg
-onClickWithPreventAndStop msg =
-    preventDefaultOn
-        "click"
-        (Decode.map alwaysPreventDefault (Decode.succeed msg))
+
+-- EVENT : ONCLICK
 
 
 onClickWithPrevent : msg -> Attribute msg
@@ -46,11 +46,16 @@ onClickWithPrevent msg =
 
 onClickWithStop : msg -> Attribute msg
 onClickWithStop msg =
-    preventDefaultOn
+    stopPropagationOn
         "click"
-        (Decode.map alwaysPreventDefault (Decode.succeed msg))
+        (Decode.map alwaysStop (Decode.succeed msg))
 
 
 alwaysPreventDefault : msg -> ( msg, Bool )
 alwaysPreventDefault msg =
     ( msg, True )
+
+
+alwaysStop : a -> ( a, Bool )
+alwaysStop x =
+    ( x, True )

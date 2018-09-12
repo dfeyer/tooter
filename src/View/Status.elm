@@ -30,7 +30,11 @@ viewStatus theme { account, content, mentions } =
 
 statusContent : Theme -> String -> List Mention -> Html msg
 statusContent theme content mentions =
-    div [ css [ marginTop (rem 0.25) ] ] (formatContent content mentions)
+    div
+        [ css
+            [ marginTop (rem 0.25) ]
+        ]
+        (formatContent content mentions)
 
 
 statusMedia : Theme -> String -> Html msg

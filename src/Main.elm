@@ -449,7 +449,7 @@ protectedUrl url model token account =
             oneOf
                 [ route top
                     (stepHome model
-                        (Home.init
+                        (Home.init model.key
                             { instance = model.auth.instance
                             , token = token
                             , account = account
