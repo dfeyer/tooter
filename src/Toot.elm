@@ -5,7 +5,7 @@ import Css.Transitions exposing (easeInOut, transition)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, href)
 import Icon exposing (icon)
-import Image exposing (smallProfileImage)
+import Image exposing (smallAccountImage)
 import Theme exposing (Theme)
 
 
@@ -31,7 +31,7 @@ viewToot theme { author, content } =
             , marginBottom (rem 2)
             ]
         ]
-        [ div [ css [ marginRight (rem 1) ] ] [ smallProfileImage author.image ]
+        [ div [ css [ marginRight (rem 1) ] ] [ smallAccountImage author.image ]
         , div []
             [ tootAccount theme author
             , tootContent theme content

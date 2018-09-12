@@ -11,12 +11,12 @@ import Css.Transitions exposing (easeInOut, transition)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, href, src)
 import Icon exposing (icon)
-import Image exposing (circularProfileImage, profileImage)
+import Image exposing (circularAccountImage, accountImage)
 import OAuth exposing (Token)
 import Skeleton
 import Theme exposing (Theme)
 import Toot exposing (Toot, viewToot)
-import Type exposing (Auth, Profile)
+import Type exposing (Auth, Account)
 
 
 
@@ -26,22 +26,20 @@ import Type exposing (Auth, Profile)
 type alias Model =
     { title : String
     , token : Token
-    , profile : Profile
+    , account : Account
     }
 
 
-init : Token -> Profile -> ( Model, Cmd Msg )
-init token profile =
-    ( Model "Welcome on the Fediverse..." token profile, Cmd.none )
+init : Token -> Account -> ( Model, Cmd Msg )
+init token account =
+    ( Model "Welcome on the Fediverse..." token account, Cmd.none )
 
 
 
 -- UPDATE
 
-
 type Msg
     = NoOp
-
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
@@ -68,15 +66,15 @@ view model theme =
     }
 
 
-viewProfile : Theme -> Profile -> Html msg
-viewProfile theme profile =
+viewAccount : Theme -> Account -> Html msg
+viewAccount theme account =
     div
         [ css
             [ flex3 (int 0) (int 0) theme.layout.sidebarWidth
             , paddingLeft theme.layout.defaultMargin
             ]
         ]
-        [ div [ css [ marginBottom (rem 1) ] ] [ profileImage (Just profile.avatar) ]
+        [ div [ css [ marginBottom (rem 1) ] ] [ accountImage (Just account.avatar) ]
         , div
             [ css [ marginBottom (rem 1) ] ]
             [ div
@@ -85,7 +83,7 @@ viewProfile theme profile =
                     , fontSize (rem 1.34)
                     ]
                 ]
-                [ text profile.display_name ]
+                [ text account.display_name ]
             , div
                 [ css
                     [ fontWeight (int 500)
@@ -93,11 +91,11 @@ viewProfile theme profile =
                     , fontStyle italic
                     ]
                 ]
-                [ text ("@" ++ profile.username) ]
+                [ text ("@" ++ account.username) ]
             ]
         , div
             [ css [ width (pct 85) ] ]
-            [ text profile.note ]
+            [ text account.note ]
         ]
 
 
@@ -109,8 +107,8 @@ dummyToot =
     }
 
 
-viewTimeline : Theme -> Profile -> Html msg
-viewTimeline theme profile =
+viewTimeline : Theme -> Account -> Html msg
+viewTimeline theme account =
     div
         [ css
             [ flex (int 1)
@@ -134,8 +132,8 @@ viewTimeline theme profile =
         ]
 
 
-viewAside : Theme -> Profile -> Html msg
-viewAside theme profile =
+viewAside : Theme -> Account -> Html msg
+viewAside theme account =
     div
         [ css
             [ position relative
@@ -189,7 +187,7 @@ accountSuggestion theme maybeImage =
                     ]
                 ]
             ]
-            [ circularProfileImage maybeImage
+            [ circularAccountImage maybeImage
             , span [ css [ marginLeft (rem 0.5) ] ] [ icon "person-add" ]
             , span [ css [ marginLeft (rem 0.5) ] ] [ text "Add" ]
             ]
@@ -215,13 +213,13 @@ asideLink { colors } iconName label =
 
 
 viewContent : Theme -> Model -> Html msg
-viewContent theme {profile} =
+viewContent theme {account} =
     div
         [ css
             [ displayFlex
             ]
         ]
-        [ viewProfile theme profile
-        , viewTimeline theme profile
-        , viewAside theme profile
+        [ viewAccount theme account
+        , viewTimeline theme account
+        , viewAside theme account
         ]

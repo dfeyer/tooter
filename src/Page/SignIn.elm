@@ -10,10 +10,10 @@ import Json.Decode as Json exposing (Decoder)
 import Mastodon.Url
 import OAuth
 import OAuth.AuthorizationCode
-import Page.SignIn.Decoder exposing (profileDecoder)
+import Page.SignIn.Decoder exposing (accountDecoder)
 import Skeleton
 import Theme exposing (Theme)
-import Type exposing (Auth, OAuthConfiguration, Profile)
+import Type exposing (Auth, OAuthConfiguration, Account)
 import Url exposing (Protocol(..), Url)
 
 
@@ -156,7 +156,7 @@ configuration =
     , clientSecret = "N8JGmR3_-IT6y9-DQE_13t5DQlUYjJKTx2GEsQt0IXc="
     , authorizationEndpoint = { defaultHttpsUrl | path = Mastodon.Url.oauthAuthorize }
     , tokenEndpoint = { defaultHttpsUrl | path = Mastodon.Url.oauthToken }
-    , profileEndpoint = { defaultHttpsUrl | path = Mastodon.Url.userAccount }
+    , accountEndpoint = { defaultHttpsUrl | path = Mastodon.Url.userAccount }
     , scope = [ "read", "write", "follow" ]
-    , profileDecoder = profileDecoder
+    , accountDecoder = accountDecoder
     }

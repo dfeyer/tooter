@@ -1,4 +1,4 @@
-module Image exposing (circularProfileImage, profileImage, smallProfileImage)
+module Image exposing (circularAccountImage, accountImage, smallAccountImage)
 
 import Css exposing (..)
 import Html.Styled exposing (..)
@@ -13,7 +13,7 @@ type alias Radius units =
     ExplicitLength units
 
 
-type alias ProfileImage =
+type alias AccountImage =
     Maybe String
 
 
@@ -31,24 +31,24 @@ squaredImage dimension radius maybeImage =
             div [ css style ] []
 
 
-profileImage : ProfileImage -> Html msg
-profileImage maybeImage =
+accountImage : AccountImage -> Html msg
+accountImage maybeImage =
     squaredImage
         (rem 6)
         (rem 0.5)
         maybeImage
 
 
-smallProfileImage : ProfileImage -> Html msg
-smallProfileImage maybeImage =
+smallAccountImage : AccountImage -> Html msg
+smallAccountImage maybeImage =
     squaredImage
         (rem 3.5)
         (rem 0.5)
         maybeImage
 
 
-circularProfileImage : ProfileImage -> Html msg
-circularProfileImage maybeImage =
+circularAccountImage : AccountImage -> Html msg
+circularAccountImage maybeImage =
     squaredImage
         (rem 2)
         (pct 50)

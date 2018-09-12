@@ -23,11 +23,11 @@ import Page.Problem as Problem
 import Page.SignIn as SignIn
 import Page.SignIn.Error
 import Ports
-import Profile
+import Account
 import Skeleton exposing (Details)
 import Theme exposing (Palette, Theme, createTheme)
 import Token
-import Type exposing (Auth, Client, OAuthConfiguration, Profile, initAuth, resumeAuth)
+import Type exposing (Auth, Client, OAuthConfiguration, Account, initAuth, resumeAuth)
 import Url exposing (Protocol(..), Url)
 import Url.Parser as Parser exposing ((</>), Parser, custom, fragment, map, oneOf, s, top)
 
@@ -108,7 +108,7 @@ view ({ auth, theme } as model) =
         Fetching ->
             toUnstyledDocument <|
                 Skeleton.minimalView
-                    { title = "🌎 Fetching profile"
+                    { title = "🌎 Fetching account..."
                     , header = []
                     , warning = Skeleton.NoProblems
                     , kids =
@@ -153,10 +153,10 @@ resumeClient clients =
                     Ok (list |> List.head)
 
                 Err _ ->
-                    Err (InvalidToken "Unable to parse stored profile and token")
+                    Err (InvalidToken "Unable to parse stored account and token")
 
         Err _ ->
-            Err (InvalidToken "Unable to decode stored profile and token")
+            Err (InvalidToken "Unable to decode stored account and token")
 
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -207,7 +207,7 @@ type
       -- Got a response from the googleapis token endpoint
     | GotAccessToken OAuthConfiguration (Result Http.Error OAuth.AuthorizationCode.AuthenticationSuccess)
       -- Got a response from the googleapis info endpoint
-    | GotUserInfo (Result Http.Error Profile)
+    | GotUserInfo (Result Http.Error Account)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -290,17 +290,17 @@ update message ({ auth } as model) =
         GotUserInfo res ->
             case res of
                 Err err ->
-                    ( updateAuthError model (Just "Unable to fetch user profile ¯\\_(ツ)_/¯")
+                    ( updateAuthError model (Just "Unable to fetch user account ¯\\_(ツ)_/¯")
                     , Cmd.none
                     )
 
-                Ok profile ->
-                    ( updateAuthProfile model (Just profile)
+                Ok account ->
+                    ( updateAuthAccount model (Just account)
                     , Cmd.batch
                         [ pushUrl model.key "/"
                         , case auth.token of
                             Just token ->
-                                saveClients [ Client auth.instance token profile ]
+                                saveClients [ Client auth.instance token account ]
 
                             _ ->
                                 Cmd.none
@@ -348,14 +348,14 @@ updateAuthToken model value =
     { model | auth = u }
 
 
-updateAuthProfile : Model -> Maybe Profile -> Model
-updateAuthProfile model value =
+updateAuthAccount : Model -> Maybe Account -> Model
+updateAuthAccount model value =
     let
         c =
             model.auth
 
         u =
-            { c | profile = value }
+            { c | account = value }
     in
     { model | auth = u }
 
@@ -365,15 +365,15 @@ updateAuthProfile model value =
 
 
 getUserInfo : Auth -> OAuthConfiguration -> Token -> Cmd Msg
-getUserInfo auth { profileEndpoint, profileDecoder } token =
+getUserInfo auth { accountEndpoint, accountDecoder } token =
     Http.send GotUserInfo <|
         Http.request
             { method = "GET"
             , body = Http.emptyBody
             , headers = OAuth.useToken token []
             , withCredentials = False
-            , url = Url.toString { profileEndpoint | host = auth.instance }
-            , expect = Http.expectJson profileDecoder
+            , url = Url.toString { accountEndpoint | host = auth.instance }
+            , expect = Http.expectJson accountDecoder
             , timeout = Nothing
             }
 
@@ -414,18 +414,18 @@ saveClients clients =
 clientEncoder : Client -> Encode.Value
 clientEncoder client =
     Encode.object
-        [ ( "server", Encode.string client.server )
+        [ ( "instance", Encode.string client.instance )
         , ( "token", OAuth.tokenToString client.token |> Encode.string )
-        , ( "profile", Profile.encoder client.profile )
+        , ( "account", Account.encoder client.account )
         ]
 
 
 clientDecoder : Decoder Client
 clientDecoder =
     Decode.succeed Client
-        |> required "server" Decode.string
+        |> required "instance" Decode.string
         |> required "token" Token.decoder
-        |> required "profile" Profile.decoder
+        |> required "account" Account.decoder
 
 
 clientListDecoder : Decoder (List Client)
@@ -442,13 +442,13 @@ route parser handler =
     Parser.map handler parser
 
 
-protectedUrl : Url.Url -> Model -> Token -> Profile -> ( Model, Cmd Msg )
-protectedUrl url model token profile =
+protectedUrl : Url.Url -> Model -> Token -> Account -> ( Model, Cmd Msg )
+protectedUrl url model token account =
     let
         parser =
             oneOf
                 [ route top
-                    (stepHome model (Home.init token profile))
+                    (stepHome model (Home.init token account))
                 ]
     in
     case Parser.parse parser url of
@@ -463,9 +463,9 @@ protectedUrl url model token profile =
 
 stepUrl : Url.Url -> Model -> ( Model, Cmd Msg )
 stepUrl url ({ auth } as model) =
-    case ( auth.token, auth.profile ) of
-        ( Just token, Just profile ) ->
-            protectedUrl url model token profile
+    case ( auth.token, auth.account ) of
+        ( Just token, Just account ) ->
+            protectedUrl url model token account
 
         _ ->
             stepSignIn model url

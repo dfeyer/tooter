@@ -1,4 +1,4 @@
-module Type exposing (Auth, Client, OAuthConfiguration, Profile, Server, initAuth, resumeAuth)
+module Type exposing (Auth, Client, OAuthConfiguration, Account, Instance, initAuth, resumeAuth)
 
 import Browser.Navigation as Nav exposing (Key)
 import Json.Decode as Json
@@ -16,9 +16,9 @@ type alias Auth =
     { redirectUri : Url
     , error : Maybe String
     , token : Maybe Token
-    , profile : Maybe Profile
+    , account : Maybe Account
     , state : String
-    , instance : Server
+    , instance : Instance
     }
 
 
@@ -27,48 +27,48 @@ initAuth bytes url =
     { redirectUri = { url | query = Nothing, fragment = Nothing }
     , error = Nothing
     , token = Nothing
-    , profile = Nothing
+    , account = Nothing
     , state = bytes
     , instance = "social.ttree.docker"
     }
 
 
 resumeAuth : Client -> String -> Url -> Auth
-resumeAuth { server, token, profile } bytes url =
+resumeAuth { instance, token, account } bytes url =
     let
         a =
             initAuth bytes url
     in
-    { a | instance = server, token = Just token, profile = Just profile }
+    { a | instance = instance, token = Just token, account = Just account }
 
 
 type alias OAuthConfiguration =
     { authorizationEndpoint : Url
     , tokenEndpoint : Url
-    , profileEndpoint : Url
+    , accountEndpoint : Url
     , clientId : String
     , clientSecret : String
     , scope : List String
-    , profileDecoder : Json.Decoder Profile
+    , accountDecoder : Json.Decoder Account
     }
 
 
-type alias Server =
+type alias Instance =
     String
 
 
 type alias Client =
-    { server : Server
+    { instance : Instance
     , token : Token
-    , profile : Profile
+    , account : Account
     }
 
 
-type alias ProfileId =
+type alias AccountId =
     String
 
 
-type alias Profile =
+type alias Account =
     { acct : String
     , avatar : String
     , created_at : Posix
@@ -76,7 +76,7 @@ type alias Profile =
     , followers_count : Int
     , following_count : Int
     , header : String
-    , id : ProfileId
+    , id : AccountId
     , locked : Bool
     , note : String
     , statuses_count : Int

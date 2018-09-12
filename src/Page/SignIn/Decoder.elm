@@ -1,13 +1,13 @@
-module Page.SignIn.Decoder exposing (profileDecoder)
+module Page.SignIn.Decoder exposing (accountDecoder)
 
 import Json.Decode as Json exposing (Decoder, bool, int, string)
 import Json.Decode.Pipeline exposing (hardcoded, optional, required)
-import Type exposing (Profile)
+import Type exposing (Account)
 import Iso8601
 
-profileDecoder : Decoder Profile
-profileDecoder =
-    Json.succeed Profile
+accountDecoder : Decoder Account
+accountDecoder =
+    Json.succeed Account
         |> required "acct" string
         |> required "avatar" string
         |> required "created_at" Iso8601.decoder
