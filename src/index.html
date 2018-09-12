@@ -4,11 +4,8 @@
     <meta charset="utf-8">
     <title>🌎 Tooter A client for the decentralized social networking</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/normalize.css">
-    <link rel="stylesheet" href="/fonts/stylesheet.css">
-    <link href="https://unpkg.com/ionicons@4.4.2/dist/css/ionicons.min.css" rel="stylesheet">
     <script src="/main.js"></script>
-    <link rel="icon" type="image/png" sizes="192x192"  href="images/favicon-192x192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192x192.png">
     <link rel="icon" type="image/png" sizes="96x96" href="images/favicon-96x96.png">
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
@@ -37,6 +34,7 @@
             width: 100vw;
             overflow-x: hidden;
         }
+
         #app {
             width: 65rem;
             max-width: 75%;
@@ -62,12 +60,19 @@
             .join("");
     });
 
-    const clients = localStorage.getItem("tooty.clients") || "[]";
+    const clients = localStorage.getItem("tooter.clients") || "[]";
 
-    const app = Elm.Main.init({ node: document.getElementById("tooter"), flags: {
+    const flags = {
         randomBytes,
         clients
-    } });
+    };
+
+    console.log(flags);
+
+    const app = Elm.Main.init({
+        node: document.getElementById("tooter"),
+        flags: flags
+    });
 
     app.ports.saveClients.subscribe(json => {
         localStorage.setItem("tooter.clients", json);
@@ -86,5 +91,8 @@
             ':35729/livereload.js?snipver=1"></' + 'script>');
     }
 </script>
+<link rel="stylesheet" href="/normalize.css">
+<link rel="stylesheet" href="/fonts/stylesheet.css">
+<link href="https://unpkg.com/ionicons@4.4.2/dist/css/ionicons.min.css" rel="stylesheet">
 </body>
 </html>
