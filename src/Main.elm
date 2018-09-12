@@ -1,5 +1,6 @@
 module Main exposing (Msg(..), main, update, view)
 
+import Base64
 import Browser
 import Browser.Navigation as Nav exposing (Key, pushUrl)
 import Css exposing (maxWidth, pct, rem, width)
@@ -14,7 +15,7 @@ import Iso8601
 import Json.Decode as Json
 import Json.Encode as Encode
 import Mastodon.Url
-import OAuth
+import OAuth exposing (Token)
 import OAuth.AuthorizationCode
 import Page.Home as Home
 import Page.Problem as Problem
@@ -290,7 +291,7 @@ updateAuthError model value =
     { model | auth = u }
 
 
-updateAuthToken : Model -> Maybe OAuth.Token -> Model
+updateAuthToken : Model -> Maybe Token -> Model
 updateAuthToken model value =
     let
         c =
@@ -318,7 +319,7 @@ updateAuthProfile model value =
 -- USER INFO
 
 
-getUserInfo : Auth -> OAuthConfiguration -> OAuth.Token -> Cmd Msg
+getUserInfo : Auth -> OAuthConfiguration -> Token -> Cmd Msg
 getUserInfo auth { profileEndpoint, profileDecoder } token =
     Http.send GotUserInfo <|
         Http.request
@@ -361,6 +362,7 @@ saveClients clients =
         |> List.map clientEncoder
         |> Encode.list identity
         |> toJson
+        |> Base64.encode
         |> Ports.saveClients
 
 
@@ -401,13 +403,13 @@ route parser handler =
     Parser.map handler parser
 
 
-protectedUrl : Url.Url -> Model -> ( Model, Cmd Msg )
-protectedUrl url model =
+protectedUrl : Url.Url -> Model -> Token -> Profile -> ( Model, Cmd Msg )
+protectedUrl url model token profile =
     let
         parser =
             oneOf
                 [ route top
-                    (stepHome model Home.init)
+                    (stepHome model (Home.init token profile))
                 ]
     in
     case Parser.parse parser url of
@@ -424,7 +426,7 @@ stepUrl : Url.Url -> Model -> ( Model, Cmd Msg )
 stepUrl url ({ auth } as model) =
     case ( auth.token, auth.profile ) of
         ( Just token, Just profile ) ->
-            protectedUrl url model
+            protectedUrl url model token profile
 
         _ ->
             stepSignIn model url

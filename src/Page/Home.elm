@@ -12,9 +12,11 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, href, src)
 import Icon exposing (icon)
 import Image exposing (circularProfileImage, profileImage)
+import OAuth exposing (Token)
 import Skeleton
 import Theme exposing (Theme)
 import Toot exposing (Toot, viewToot)
+import Type exposing (Auth, Profile)
 
 
 
@@ -23,12 +25,14 @@ import Toot exposing (Toot, viewToot)
 
 type alias Model =
     { title : String
+    , token : Token
+    , profile : Profile
     }
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( Model "Home", Cmd.none )
+init : Token -> Profile -> ( Model, Cmd Msg )
+init token profile =
+    ( Model "Welcome on the Fediverse..." token profile, Cmd.none )
 
 
 
