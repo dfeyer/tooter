@@ -1,4 +1,4 @@
-module Page.SignIn exposing (configuration, view, viewSignInButton)
+module Page.SignIn exposing (configuration, view, viewFetching, viewSignInButton)
 
 import Browser.Navigation as Navigation exposing (Key)
 import Css exposing (..)
@@ -18,19 +18,7 @@ import Url exposing (Protocol(..), Url)
 
 view : Theme -> { onSignOut : msg, buttons : List (Html msg) } -> Auth -> Html msg
 view theme { onSignOut, buttons } auth =
-    let
-        content =
-            case ( auth.token, auth.profile ) of
-                ( Nothing, Nothing ) ->
-                    viewLogin { buttons = buttons }
-
-                ( Just token, Nothing ) ->
-                    [ viewFetching ]
-
-                ( _, Just profile ) ->
-                    [ viewProfile onSignOut profile ]
-    in
-    viewBody theme auth content
+    viewBody theme auth (viewLogin { buttons = buttons })
 
 
 viewBody : Theme -> Auth -> List (Html msg) -> Html msg
@@ -61,54 +49,17 @@ viewLogin { buttons } =
     ]
 
 
-viewFetching : Html msg
-viewFetching =
+viewFetching : Theme -> Html msg
+viewFetching theme =
     div
-        [ style "color" "#757575"
-        , style "font" "Roboto Arial"
-        , style "text-align" "center"
-        , style "display" "flex"
-        , style "align-items" "center"
-        , style "justify-content" "center"
-        ]
-        [ text "fetching profile..." ]
-
-
-viewProfile : msg -> Profile -> Html msg
-viewProfile onSignOut profile =
-    div
-        [ style "display" "flex"
-        , style "flex-direction" "column"
-        , style "align-items" "center"
-        , style "justify-content" "center"
-        ]
-        [ img
-            [ src profile.picture
-            , style "height" "15em"
-            , style "width" "15em"
-            , style "border-radius" "50%"
-            , style "box-shadow" "rgba(0,0,0,0.25) 0 0 4px 2px"
-            ]
-            []
-        , div
-            [ style "margin" "2em"
-            , style "font" "24px Roboto, Arial"
-            , style "color" "#757575"
-            ]
-            [ text <| profile.name ]
-        , div
-            []
-            [ button
-                [ onClick onSignOut
-                , style "font-size" "24px"
-                , style "cursor" "pointer"
-                , style "height" "2em"
-                , style "width" "8em"
-                ]
-                [ text "Sign Out"
-                ]
+        [ css
+            [ displayFlex
+            , justifyContent center
+            , alignItems center
+            , marginTop (rem 2)
             ]
         ]
+        [ div [] [ text "Fetching..." ] ]
 
 
 viewError : Theme -> Maybe String -> Html msg

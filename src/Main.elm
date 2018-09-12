@@ -1,7 +1,7 @@
 module Main exposing (Msg(..), main, update, view)
 
 import Browser
-import Browser.Navigation as Nav exposing (Key)
+import Browser.Navigation as Nav exposing (Key, pushUrl)
 import Css exposing (maxWidth, pct, rem, width)
 import Document exposing (Document, toUnstyledDocument)
 import Html
@@ -40,6 +40,7 @@ type alias Model =
 type Page
     = NotFound
     | SignIn
+    | Fetching
     | Home Home.Model
 
 
@@ -95,6 +96,18 @@ view ({ auth, theme } as model) =
                     , theme = theme
                     }
 
+        Fetching ->
+            toUnstyledDocument <|
+                Skeleton.minimalView
+                    { title = "🌎 Fetching profile"
+                    , header = []
+                    , warning = Skeleton.NoProblems
+                    , kids =
+                        [ SignIn.viewFetching theme ]
+                    , css = []
+                    , theme = theme
+                    }
+
         Home home ->
             toUnstyledDocument <|
                 Skeleton.view HomeMsg (Home.view home theme)
@@ -131,10 +144,8 @@ init { randomBytes } url key =
 
 type
     Msg
-    -- No operation, terminal case
-    = NoOp
-      -- Trigger when the user click on link, default navigation
-    | LinkClicked Browser.UrlRequest
+    -- Trigger when the user click on link, default navigation
+    = LinkClicked Browser.UrlRequest
       -- Trigger after an URL chang, external navigation (back/forward)
     | UrlChanged Url.Url
       -- The "home timeline" button has been hit
@@ -202,9 +213,6 @@ updateAuthProfile model value =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update message ({ auth } as model) =
     case message of
-        NoOp ->
-            ( model, Cmd.none )
-
         LinkClicked urlRequest ->
             case urlRequest of
                 Browser.Internal url ->
@@ -288,7 +296,7 @@ update message ({ auth } as model) =
 
                 Ok profile ->
                     ( updateAuthProfile model (Just profile)
-                    , Cmd.none
+                    , pushUrl model.key "/"
                     )
 
 
@@ -321,36 +329,39 @@ getAccessToken auth ({ clientId, clientSecret, tokenEndpoint } as config) redire
                 }
 
 
-stepHome : Model -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg )
-stepHome model ( home, cmds ) =
-    ( { model | page = Home home }
-    , Cmd.map HomeMsg cmds
-    )
-
-
 
 -- ROUTER
 
 
-stepUrl : Url.Url -> Model -> ( Model, Cmd Msg )
-stepUrl url model =
-    case ( model.auth.token, model.auth.profile ) of
-        ( Just token, Just profile ) ->
-            let
-                parser =
-                    oneOf
-                        [ route top
-                            (stepHome model Home.init)
-                        ]
-            in
-            case Parser.parse parser url of
-                Just answer ->
-                    answer
+route : Parser a b -> a -> Parser (b -> c) c
+route parser handler =
+    Parser.map handler parser
 
-                Nothing ->
-                    ( { model | page = NotFound }
-                    , Cmd.none
-                    )
+
+protectedUrl : Url.Url -> Model -> ( Model, Cmd Msg )
+protectedUrl url model =
+    let
+        parser =
+            oneOf
+                [ route top
+                    (stepHome model Home.init)
+                ]
+    in
+    case Parser.parse parser url of
+        Just answer ->
+            answer
+
+        Nothing ->
+            ( { model | page = NotFound }
+            , Cmd.none
+            )
+
+
+stepUrl : Url.Url -> Model -> ( Model, Cmd Msg )
+stepUrl url ({ auth } as model) =
+    case ( auth.token, auth.profile ) of
+        ( Just token, Just profile ) ->
+            protectedUrl url model
 
         _ ->
             stepSignIn model url
@@ -369,7 +380,7 @@ stepSignIn ({ auth } as model) url =
                 )
 
             else
-                ( model
+                ( { model | page = Fetching }
                 , getAccessToken auth SignIn.configuration auth.redirectUri code
                 )
 
@@ -379,6 +390,15 @@ stepSignIn ({ auth } as model) url =
             )
 
 
-route : Parser a b -> a -> Parser (b -> c) c
-route parser handler =
-    Parser.map handler parser
+stepFetching : Model -> ( Model, Cmd Msg )
+stepFetching model =
+    ( { model | page = Fetching }
+    , Cmd.none
+    )
+
+
+stepHome : Model -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg )
+stepHome model ( home, cmds ) =
+    ( { model | page = Home home }
+    , Cmd.map HomeMsg cmds
+    )
