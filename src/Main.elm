@@ -10,7 +10,9 @@ import Html.Styled.Attributes exposing (css, id)
 import Html.Styled.Events exposing (onClick)
 import Html.Styled.Lazy exposing (lazy)
 import Http
+import Iso8601
 import Json.Decode as Json
+import Json.Encode as Encode
 import Mastodon.Url
 import OAuth
 import OAuth.AuthorizationCode
@@ -18,9 +20,10 @@ import Page.Home as Home
 import Page.Problem as Problem
 import Page.SignIn as SignIn
 import Page.SignIn.Error
+import Ports
 import Skeleton exposing (Details)
 import Theme exposing (Palette, Theme, createTheme)
-import Type exposing (Auth, OAuthConfiguration, Profile, initAuth)
+import Type exposing (Auth, Client, OAuthConfiguration, Profile, initAuth)
 import Url exposing (Protocol(..), Url)
 import Url.Parser as Parser exposing ((</>), Parser, custom, fragment, map, oneOf, s, top)
 
@@ -162,54 +165,6 @@ type
     | GotUserInfo (Result Http.Error Profile)
 
 
-updateAuthInstance : Model -> String -> Model
-updateAuthInstance model value =
-    let
-        c =
-            model.auth
-
-        u =
-            { c | instance = value }
-    in
-    { model | auth = u }
-
-
-updateAuthError : Model -> Maybe String -> Model
-updateAuthError model value =
-    let
-        c =
-            model.auth
-
-        u =
-            { c | error = value }
-    in
-    { model | auth = u }
-
-
-updateAuthToken : Model -> Maybe OAuth.Token -> Model
-updateAuthToken model value =
-    let
-        c =
-            model.auth
-
-        u =
-            { c | token = value }
-    in
-    { model | auth = u }
-
-
-updateAuthProfile : Model -> Maybe Profile -> Model
-updateAuthProfile model value =
-    let
-        c =
-            model.auth
-
-        u =
-            { c | profile = value }
-    in
-    { model | auth = u }
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update message ({ auth } as model) =
     case message of
@@ -296,8 +251,71 @@ update message ({ auth } as model) =
 
                 Ok profile ->
                     ( updateAuthProfile model (Just profile)
-                    , pushUrl model.key "/"
+                    , Cmd.batch
+                        [ pushUrl model.key "/"
+                        , case (auth.token) of
+                            Just token ->
+                                saveClients [ Client auth.instance token profile ]
+                            _ ->
+                                Cmd.none
+                        ]
                     )
+
+
+
+-- UPDATE HELPERS
+
+
+updateAuthInstance : Model -> String -> Model
+updateAuthInstance model value =
+    let
+        c =
+            model.auth
+
+        u =
+            { c | instance = value }
+    in
+    { model | auth = u }
+
+
+updateAuthError : Model -> Maybe String -> Model
+updateAuthError model value =
+    let
+        c =
+            model.auth
+
+        u =
+            { c | error = value }
+    in
+    { model | auth = u }
+
+
+updateAuthToken : Model -> Maybe OAuth.Token -> Model
+updateAuthToken model value =
+    let
+        c =
+            model.auth
+
+        u =
+            { c | token = value }
+    in
+    { model | auth = u }
+
+
+updateAuthProfile : Model -> Maybe Profile -> Model
+updateAuthProfile model value =
+    let
+        c =
+            model.auth
+
+        u =
+            { c | profile = value }
+    in
+    { model | auth = u }
+
+
+
+-- USER INFO
 
 
 getUserInfo : Auth -> OAuthConfiguration -> OAuth.Token -> Cmd Msg
@@ -314,6 +332,10 @@ getUserInfo auth { profileEndpoint, profileDecoder } token =
             }
 
 
+
+-- ACCESS TOKEN
+
+
 getAccessToken : Auth -> OAuthConfiguration -> Url -> String -> Cmd Msg
 getAccessToken auth ({ clientId, clientSecret, tokenEndpoint } as config) redirectUri code =
     Http.send (GotAccessToken config) <|
@@ -327,6 +349,47 @@ getAccessToken auth ({ clientId, clientSecret, tokenEndpoint } as config) redire
                 , url = { tokenEndpoint | host = auth.instance }
                 , redirectUri = redirectUri
                 }
+
+
+
+-- CLIENT
+
+
+saveClients : List Client -> Cmd Msg
+saveClients clients =
+    clients
+        |> List.map clientEncoder
+        |> Encode.list identity
+        |> toJson
+        |> Ports.saveClients
+
+
+clientEncoder : Client -> Encode.Value
+clientEncoder client =
+    Encode.object
+        [ ( "server", Encode.string client.server )
+        , ( "token", OAuth.tokenToString client.token |> Encode.string )
+        , ( "profile", profileEncoder client.profile )
+        ]
+
+
+profileEncoder : Profile -> Encode.Value
+profileEncoder profile =
+    Encode.object
+        [ ( "acct", Encode.string profile.acct )
+        , ( "avatar", Encode.string profile.avatar )
+        , ( "created_at", Iso8601.fromTime profile.created_at |> Encode.string )
+        , ( "display_name", Encode.string profile.display_name )
+        , ( "followers_count", Encode.int profile.followers_count )
+        , ( "following_count", Encode.int profile.following_count )
+        , ( "header", Encode.string profile.header )
+        , ( "id", Encode.string profile.id )
+        , ( "locked", Encode.bool profile.locked )
+        , ( "note", Encode.string profile.note )
+        , ( "statuses_count", Encode.int profile.statuses_count )
+        , ( "url", Encode.string profile.url )
+        , ( "username", Encode.string profile.username )
+        ]
 
 
 
@@ -402,3 +465,8 @@ stepHome model ( home, cmds ) =
     ( { model | page = Home home }
     , Cmd.map HomeMsg cmds
     )
+
+
+toJson : Encode.Value -> String
+toJson =
+    Encode.encode 0

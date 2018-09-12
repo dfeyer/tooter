@@ -1,8 +1,8 @@
-module Type exposing (Auth, OAuthConfiguration, Profile, initAuth)
+module Type exposing (Auth, Client, OAuthConfiguration, Profile, Server, initAuth)
 
 import Browser.Navigation as Nav exposing (Key)
 import Json.Decode as Json
-import OAuth
+import OAuth exposing (Token)
 import Theme exposing (Theme)
 import Time exposing (Posix)
 import Url exposing (Url)
@@ -15,10 +15,10 @@ import Url exposing (Url)
 type alias Auth =
     { redirectUri : Url
     , error : Maybe String
-    , token : Maybe OAuth.Token
+    , token : Maybe Token
     , profile : Maybe Profile
     , state : String
-    , instance : String
+    , instance : Server
     }
 
 
@@ -41,6 +41,17 @@ type alias OAuthConfiguration =
     , clientSecret : String
     , scope : List String
     , profileDecoder : Json.Decoder Profile
+    }
+
+
+type alias Server =
+    String
+
+
+type alias Client =
+    { server : Server
+    , token : Token
+    , profile : Profile
     }
 
 
