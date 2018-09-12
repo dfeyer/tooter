@@ -17,6 +17,7 @@
             "elm/time": "1.0.0",
             "elm/url": "1.0.0",
             "elm-community/string-extra": "3.0.0",
+            "hecrj/html-parser": "1.0.1",
             "krisajenkins/remotedata": "5.0.0",
             "rtfeldman/elm-css": "15.1.0",
             "rtfeldman/elm-iso8601-date-strings": "1.1.2",

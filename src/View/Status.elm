@@ -1,4 +1,4 @@
-module Status exposing (viewStatus)
+module View.Status exposing (viewStatus)
 
 import Css exposing (..)
 import Css.Transitions exposing (easeInOut, transition)
@@ -7,11 +7,12 @@ import Html.Styled.Attributes exposing (css, href)
 import Icon exposing (icon)
 import Image exposing (smallAccountImage)
 import Theme exposing (Theme)
-import Type exposing (Account, Status)
+import Type exposing (..)
+import View.Formatter exposing (formatContent)
 
 
 viewStatus : Theme -> Status -> Html msg
-viewStatus theme { account, content } =
+viewStatus theme { account, content, mentions } =
     div
         [ css
             [ displayFlex
@@ -21,15 +22,15 @@ viewStatus theme { account, content } =
         [ div [ css [ marginRight (rem 1) ] ] [ smallAccountImage (Just account.avatar) ]
         , div []
             [ statusAccount theme account
-            , statusContent theme content
+            , statusContent theme content mentions
             , statusActionGroup theme
             ]
         ]
 
 
-statusContent : Theme -> String -> Html msg
-statusContent theme content =
-    div [ css [ marginTop (rem 0.25) ] ] [ text content ]
+statusContent : Theme -> String -> List Mention -> Html msg
+statusContent theme content mentions =
+    div [ css [ marginTop (rem 0.25) ] ] (formatContent content mentions)
 
 
 statusMedia : Theme -> String -> Html msg
@@ -54,7 +55,7 @@ statusAccount theme { display_name, username } =
                 , fontStyle italic
                 ]
             ]
-            [ span [] [ text username ]
+            [ span [] [ text ("@" ++ username) ]
 
             -- , span [ css [ opacity (num 0.4) ] ] [ text "@" ]
             -- , span [ css [ opacity (num 0.4) ] ] [ text instance ]

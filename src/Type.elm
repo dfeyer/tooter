@@ -4,6 +4,7 @@ module Type exposing
     , Attachment
     , Auth
     , Client
+    , InputInformation
     , Instance
     , Mention
     , OAuthConfiguration
@@ -25,6 +26,12 @@ import Url exposing (Url)
 
 
 --- TYPES
+
+
+type alias InputInformation =
+    { status : String
+    , selectionStart : Int
+    }
 
 
 type alias Auth =

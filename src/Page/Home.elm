@@ -18,7 +18,7 @@ import OAuth exposing (Token)
 import RemoteData exposing (RemoteData(..), WebData)
 import Request.Timeline exposing (homeTimeline)
 import Skeleton
-import Status exposing (viewStatus)
+import View.Status exposing (viewStatus)
 import Theme exposing (Theme)
 import Type exposing (Account, Auth, Client, Status)
 
