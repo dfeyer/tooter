@@ -6,10 +6,11 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, placeholder, src, style, type_, value)
 import Html.Styled.Events exposing (onClick, onInput)
 import Http
-import Json.Decode as Json
+import Json.Decode as Json exposing (Decoder)
 import Mastodon.Url
 import OAuth
 import OAuth.AuthorizationCode
+import Page.SignIn.Decoder exposing (profileDecoder)
 import Skeleton
 import Theme exposing (Theme)
 import Type exposing (Auth, OAuthConfiguration, Profile)
@@ -157,8 +158,5 @@ configuration =
     , tokenEndpoint = { defaultHttpsUrl | path = Mastodon.Url.oauthToken }
     , profileEndpoint = { defaultHttpsUrl | path = Mastodon.Url.userAccount }
     , scope = [ "read", "write", "follow" ]
-    , profileDecoder =
-        Json.map2 Profile
-            (Json.field "username" Json.string)
-            (Json.field "avatar" Json.string)
+    , profileDecoder = profileDecoder
     }
