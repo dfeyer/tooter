@@ -62,7 +62,24 @@
             .join("");
     });
 
-    const app = Elm.Main.init({ node: document.getElementById("tooter"), flags: { randomBytes } });
+    const clients = localStorage.getItem("tooty.clients") || "[]";
+
+    const app = Elm.Main.init({ node: document.getElementById("tooter"), flags: {
+        randomBytes,
+        clients
+    } });
+
+    app.ports.saveClients.subscribe(json => {
+        localStorage.setItem("tooter.clients", json);
+    });
+
+    app.ports.saveRegistration.subscribe(json => {
+        localStorage.setItem("tooter.registration", json);
+    });
+
+    app.ports.deleteRegistration.subscribe(json => {
+        localStorage.removeItem("tooter.registration");
+    });
 
     if (location.host === 'localhost:5001') {
         document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] +
