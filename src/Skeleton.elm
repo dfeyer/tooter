@@ -240,6 +240,6 @@ viewFooter theme =
             ]
         ]
         [ text "All code for this site is open source and written in Elm. "
-        , a [ class "grey-link", href "https://github.com/ttreeagency/tooter/" ] [ text "Check it out" ]
+        , a [ class "grey-link", href "https://github.com/dfeyer/tooter" ] [ text "Check it out" ]
         , text " © 2018 ttree agency - we make internet better for you"
         ]

@@ -1,4 +1,4 @@
-module Image exposing (circularAccountImage, accountImage, smallAccountImage)
+module Image exposing (accountImage, circularAccountImage, smallAccountImage)
 
 import Css exposing (..)
 import Html.Styled exposing (..)

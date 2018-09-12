@@ -7,13 +7,13 @@ import Html.Styled.Attributes exposing (css, placeholder, src, style, type_, val
 import Html.Styled.Events exposing (onClick, onInput)
 import Http
 import Json.Decode as Json exposing (Decoder)
+import Mastodon.Decoder exposing (accountDecoder)
 import Mastodon.Url
 import OAuth
 import OAuth.AuthorizationCode
-import Mastodon.Decoder exposing (accountDecoder)
 import Skeleton
 import Theme exposing (Theme)
-import Type exposing (Auth, OAuthConfiguration, Account)
+import Type exposing (Account, Auth, OAuthConfiguration)
 import Url exposing (Protocol(..), Url)
 
 

@@ -18,8 +18,8 @@ import OAuth exposing (Token)
 import RemoteData exposing (RemoteData(..), WebData)
 import Request.Timeline exposing (homeTimeline)
 import Skeleton
+import Status exposing (viewStatus)
 import Theme exposing (Theme)
-import Toot exposing (Toot, viewToot)
 import Type exposing (Account, Auth, Client, Status)
 
 
@@ -30,8 +30,12 @@ import Type exposing (Account, Auth, Client, Status)
 type alias Model =
     { title : String
     , client : Client
-    , timeline : WebData (List Status)
+    , timeline : Timeline
     }
+
+
+type alias Timeline =
+    WebData (List Status)
 
 
 init : Client -> ( Model, Cmd Msg )
@@ -113,16 +117,8 @@ viewAccount theme account =
         ]
 
 
-dummyToot : Toot
-dummyToot =
-    { identifier = "1"
-    , content = "@Shaft Je te cache pas que j'ai rendu mon astreinte en partant tout à l'heure et que je suis bien content !"
-    , author = { identifier = "@solimanhindy@social.lovetux.net", fullname = "Soliman Hindy", image = Just "https://picsum.photos/200/300?random" }
-    }
-
-
-viewTimeline : Theme -> Account -> Html msg
-viewTimeline theme account =
+viewTimeline : Theme -> Timeline -> Html msg
+viewTimeline theme timeline =
     div
         [ css
             [ flex (int 1)
@@ -130,19 +126,18 @@ viewTimeline theme account =
             , marginRight (rem 1)
             ]
         ]
-        [ viewToot theme dummyToot
-        , viewToot theme dummyToot
-        , viewToot theme dummyToot
-        , viewToot theme dummyToot
-        , viewToot theme dummyToot
-        , viewToot theme dummyToot
-        , viewToot theme dummyToot
-        , viewToot theme dummyToot
-        , viewToot theme dummyToot
-        , viewToot theme dummyToot
-        , viewToot theme dummyToot
-        , viewToot theme dummyToot
-        , viewToot theme dummyToot
+        [ case timeline of
+            NotAsked ->
+                div [] [ text "Initialising..." ]
+
+            Loading ->
+                div [] [ text "Loading..." ]
+
+            Failure _ ->
+                div [] [ text "Oups... something bad happens. We are sorry, but not perfect. Maybe try again?" ]
+
+            Success list ->
+                div [] (List.map (viewStatus theme) list)
         ]
 
 
@@ -227,13 +222,13 @@ asideLink { colors } iconName label =
 
 
 viewContent : Theme -> Model -> Html msg
-viewContent theme { client } =
+viewContent theme { client, timeline } =
     div
         [ css
             [ displayFlex
             ]
         ]
         [ viewAccount theme client.account
-        , viewTimeline theme client.account
+        , viewTimeline theme timeline
         , viewAside theme client.account
         ]

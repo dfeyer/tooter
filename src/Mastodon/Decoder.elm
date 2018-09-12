@@ -1,13 +1,15 @@
-module Mastodon.Decoder exposing (..)
+module Mastodon.Decoder exposing (accountDecoder, applicationDecoder, attachmentDecoder, idDecoder, mentionDecoder, reblogDecoder, statusDecoder, statusIdDecoder, tagDecoder)
 
+import Iso8601
 import Json.Decode as Decode exposing (Decoder, bool, int, string)
 import Json.Decode.Pipeline exposing (hardcoded, optional, required)
 import Type exposing (Account, Application, Attachment, Mention, Reblog(..), Status, StatusId(..), Tag)
-import Iso8601
+
 
 idDecoder : Decoder String
 idDecoder =
     Decode.string
+
 
 accountDecoder : Decoder Account
 accountDecoder =
@@ -26,15 +28,18 @@ accountDecoder =
         |> required "url" Decode.string
         |> required "username" Decode.string
 
+
 applicationDecoder : Decoder Application
 applicationDecoder =
     Decode.succeed Application
         |> required "name" Decode.string
         |> required "website" (Decode.nullable Decode.string)
 
+
 statusIdDecoder : Decoder StatusId
 statusIdDecoder =
     idDecoder |> Decode.map StatusId
+
 
 attachmentDecoder : Decode.Decoder Attachment
 attachmentDecoder =
@@ -46,6 +51,7 @@ attachmentDecoder =
         |> required "preview_url" Decode.string
         |> required "text_url" (Decode.nullable Decode.string)
 
+
 mentionDecoder : Decoder Mention
 mentionDecoder =
     Decode.succeed Mention
@@ -53,6 +59,7 @@ mentionDecoder =
         |> required "url" Decode.string
         |> required "username" Decode.string
         |> required "acct" Decode.string
+
 
 statusDecoder : Decoder Status
 statusDecoder =
@@ -78,11 +85,13 @@ statusDecoder =
         |> required "url" (Decode.nullable Decode.string)
         |> required "visibility" Decode.string
 
+
 tagDecoder : Decode.Decoder Tag
 tagDecoder =
     Decode.succeed Tag
         |> required "name" Decode.string
         |> required "url" Decode.string
+
 
 reblogDecoder : Decoder Reblog
 reblogDecoder =

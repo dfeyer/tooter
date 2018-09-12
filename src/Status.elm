@@ -1,4 +1,4 @@
-module Toot exposing (Toot, viewToot)
+module Status exposing (viewStatus)
 
 import Css exposing (..)
 import Css.Transitions exposing (easeInOut, transition)
@@ -7,68 +7,45 @@ import Html.Styled.Attributes exposing (css, href)
 import Icon exposing (icon)
 import Image exposing (smallAccountImage)
 import Theme exposing (Theme)
+import Type exposing (Account, Status)
 
 
-type alias Account =
-    { identifier : String
-    , fullname : String
-    , image : Maybe String
-    }
-
-
-type alias Toot =
-    { identifier : String
-    , content : String
-    , author : Account
-    }
-
-
-viewToot : Theme -> Toot -> Html msg
-viewToot theme { author, content } =
+viewStatus : Theme -> Status -> Html msg
+viewStatus theme { account, content } =
     div
         [ css
             [ displayFlex
             , marginBottom (rem 2)
             ]
         ]
-        [ div [ css [ marginRight (rem 1) ] ] [ smallAccountImage author.image ]
+        [ div [ css [ marginRight (rem 1) ] ] [ smallAccountImage (Just account.avatar) ]
         , div []
-            [ tootAccount theme author
-            , tootContent theme content
-            , tootBar theme
+            [ statusAccount theme account
+            , statusContent theme content
+            , statusActionGroup theme
             ]
         ]
 
 
-tootContent : Theme -> String -> Html msg
-tootContent theme content =
+statusContent : Theme -> String -> Html msg
+statusContent theme content =
     div [ css [ marginTop (rem 0.25) ] ] [ text content ]
 
 
-tootMedia : Theme -> String -> Html msg
-tootMedia theme content =
+statusMedia : Theme -> String -> Html msg
+statusMedia theme content =
     div [ css [ marginTop (rem 0.25) ] ] []
 
 
-tootAccount : Theme -> Account -> Html msg
-tootAccount theme { fullname, identifier } =
-    let
-        splittedIdentifier =
-            String.split "@" identifier |> List.filter (\y -> y /= "")
-
-        username =
-            Maybe.withDefault "" (List.head splittedIdentifier)
-
-        instance =
-            Maybe.withDefault "" (List.reverse splittedIdentifier |> List.head)
-    in
+statusAccount : Theme -> Account -> Html msg
+statusAccount theme { display_name, username } =
     div []
         [ span
             [ css
                 [ Theme.headline theme
                 ]
             ]
-            [ text fullname ]
+            [ text display_name ]
         , span [ css [ opacity (num 0.2) ] ] [ text " | " ]
         , span
             [ css
@@ -78,24 +55,25 @@ tootAccount theme { fullname, identifier } =
                 ]
             ]
             [ span [] [ text username ]
-            , span [ css [ opacity (num 0.4) ] ] [ text "@" ]
-            , span [ css [ opacity (num 0.4) ] ] [ text instance ]
+
+            -- , span [ css [ opacity (num 0.4) ] ] [ text "@" ]
+            -- , span [ css [ opacity (num 0.4) ] ] [ text instance ]
             ]
         ]
 
 
-tootBar : Theme -> Html msg
-tootBar theme =
+statusActionGroup : Theme -> Html msg
+statusActionGroup theme =
     div
         [ css [ displayFlex, fontSize (rem 1.2), marginTop (rem 0.35), justifyContent end ] ]
-        [ tootBarLink theme "Send a resonse..." "arrow-return-left"
-        , tootBarLink theme "Boost" "loop"
-        , tootBarLink theme "Add to your favorits" "android-star"
+        [ statusActionGroupLink theme "Send a resonse..." "arrow-return-left"
+        , statusActionGroupLink theme "Boost" "loop"
+        , statusActionGroupLink theme "Add to your favorits" "android-star"
         ]
 
 
-tootBarLink : Theme -> String -> String -> Html msg
-tootBarLink theme label iconName =
+statusActionGroupLink : Theme -> String -> String -> Html msg
+statusActionGroupLink theme label iconName =
     a
         [ href "#"
         , css
