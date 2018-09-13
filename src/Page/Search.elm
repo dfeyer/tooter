@@ -88,6 +88,6 @@ viewContent theme { client } =
             ]
         ]
         [ Zone.sidebar theme (Account.view theme client.account)
-        , Zone.mainArea theme [ div [] [ text "Notification..." ] ]
+        , Zone.mainArea theme [ div [] [ text "Search..." ] ]
         , Zone.aside theme (WhoToFollow.view theme client.account)
         ]

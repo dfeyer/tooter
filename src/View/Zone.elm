@@ -1,4 +1,4 @@
-module View.Zone exposing (mainArea, sidebar, aside)
+module View.Zone exposing (mainArea, sidebar, aside, full)
 
 import Css exposing (..)
 import Css.Transitions exposing (easeInOut, transition)
@@ -38,10 +38,18 @@ aside : Theme -> List (Html msg) -> Html msg
 aside { layout } content =
     div
         [ css
-            [ position relative
-            , flex3 (int 0) (int 0) layout.secondSidebarWidth
+            [ flex3 (int 0) (int 0) layout.secondSidebarWidth
             , paddingLeft layout.smallMargin
             , marginRight (rem 1)
             ]
         ]
         content
+
+full : Theme -> List (Html msg) -> Html msg
+full { layout } content =
+     div
+         [ css
+             [ paddingLeft layout.defaultMargin
+             ]
+         ]
+         content
