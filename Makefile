@@ -69,7 +69,7 @@ watch:
 
 release:
 		@git checkout gh-pages
-		@git merge --no-ff -m "RELEASE: Upmerge master"
+		@git merge --no-ff -m "RELEASE: Upmerge master" master
 		@make build
 		@git add dist/*
 		@git commit -m "RELEASE: Build"
