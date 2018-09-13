@@ -10,7 +10,6 @@ idDecoder : Decoder String
 idDecoder =
     Decode.string
 
-
 accountDecoder : Decoder Account
 accountDecoder =
     Decode.succeed Account

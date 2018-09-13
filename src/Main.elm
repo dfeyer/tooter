@@ -1,6 +1,5 @@
 module Main exposing (Msg(..), main, update, view)
 
-import Account
 import Base64
 import Browser
 import Browser.Navigation as Nav exposing (Key, pushUrl)
@@ -17,6 +16,8 @@ import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (required)
 import Json.Encode as Encode
 import Mastodon.Url
+import Mastodon.Encoder exposing (accountEncoder)
+import Mastodon.Decoder exposing (accountDecoder)
 import OAuth exposing (Token)
 import OAuth.AuthorizationCode
 import Page.Create as CreatePage
@@ -502,7 +503,7 @@ clientEncoder client =
     Encode.object
         [ ( "instance", Encode.string client.instance )
         , ( "token", OAuth.tokenToString client.token |> Encode.string )
-        , ( "account", Account.encoder client.account )
+        , ( "account", accountEncoder client.account )
         ]
 
 
@@ -511,7 +512,7 @@ clientDecoder =
     Decode.succeed Client
         |> required "instance" Decode.string
         |> required "token" Token.decoder
-        |> required "account" Account.decoder
+        |> required "account" accountDecoder
 
 
 clientListDecoder : Decoder (List Client)
