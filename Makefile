@@ -66,3 +66,11 @@ serve:
 watch:
 		make livereload & \
 		find ${SRC_DIR} -name '*.elm' | entr make elm
+
+release:
+		@git checkout gh-pages
+		@git merge --no-ff -m "RELEASE: Upmerge master"
+		@make build
+		@git add dist/*
+		@git commit -m "RELEASE: Build"
+		@git subtree push --prefix dist origin gh-pages
