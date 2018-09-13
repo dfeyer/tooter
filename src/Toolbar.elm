@@ -9,9 +9,26 @@ import Icon exposing (icon, iconWithLabel)
 import Theme exposing (Palette, Theme, overrideCss)
 
 
-linkWrapper : List (Html msg) -> List (Html msg)
-linkWrapper content =
-    [ div [ css [ margin2 (rem 0) (rem 1) ] ] content ]
+
+-- TYPES
+
+
+type alias LinkContent msg =
+    List (Html msg)
+
+
+type alias LinkLabel =
+    String
+
+
+type alias IconName =
+    String
+
+type alias Href =
+    String
+
+
+-- TOOLBAR
 
 
 toolbarLinkStyle : Theme -> List Style
@@ -28,18 +45,18 @@ toolbarLinkStyle theme =
     ]
 
 
-toolbarLink : Theme -> List (Html msg) -> Html msg
-toolbarLink theme content =
+toolbarLink : Theme -> Href -> LinkContent msg -> Html msg
+toolbarLink theme url content =
     a
         [ css
             (toolbarLinkStyle theme)
-        , href "#"
+        , href url
         ]
         (linkWrapper content)
 
 
-inversedToolbarLink : Theme -> List (Html msg) -> Html msg
-inversedToolbarLink theme content =
+inversedToolbarLink : Theme -> Href -> LinkContent msg -> Html msg
+inversedToolbarLink theme url content =
     a
         [ overrideCss
             (toolbarLinkStyle theme)
@@ -49,13 +66,13 @@ inversedToolbarLink theme content =
                 [ backgroundColor theme.colors.lightText
                 ]
             ]
-        , href "#"
+        , href url
         ]
         (linkWrapper content)
 
 
-majorToolbarLink : Theme -> List (Html msg) -> Html msg
-majorToolbarLink theme content =
+majorToolbarLink : Theme -> Href -> LinkContent msg -> Html msg
+majorToolbarLink theme url content =
     a
         [ overrideCss
             (toolbarLinkStyle theme)
@@ -65,13 +82,13 @@ majorToolbarLink theme content =
                 [ color theme.colors.lightText
                 ]
             ]
-        , href "#"
+        , href url
         ]
         (linkWrapper content)
 
 
-circularToolbarLink : Theme -> List (Html msg) -> Html msg
-circularToolbarLink theme content =
+circularToolbarLink : Theme -> Href -> LinkContent msg -> Html msg
+circularToolbarLink theme url content =
     a
         [ overrideCss
             (toolbarLinkStyle theme)
@@ -87,36 +104,45 @@ circularToolbarLink theme content =
                 , transforms [ scale 0.9 ]
                 ]
             ]
-        , href "#"
+        , href url
         ]
         (linkWrapper content)
 
 
-navigationLink : Theme -> String -> String -> Html msg
-navigationLink theme label iconName =
-    toolbarLink theme
+navigationLink : Theme -> Href -> LinkLabel -> IconName -> Html msg
+navigationLink theme url label iconName =
+    toolbarLink theme url
         [ iconWithLabel iconName label ]
 
 
-iconLink : Theme -> String -> String -> Html msg
-iconLink theme label iconName =
-    toolbarLink theme
+iconLink : Theme -> Href -> LinkLabel -> IconName -> Html msg
+iconLink theme url label iconName =
+    toolbarLink theme url
         [ icon iconName ]
 
 
-inversedIconLink : Theme -> String -> String -> Html msg
-inversedIconLink theme label iconName =
-    inversedToolbarLink theme
+inversedIconLink : Theme -> Href -> LinkLabel -> IconName -> Html msg
+inversedIconLink theme url label iconName =
+    inversedToolbarLink theme url
         [ icon iconName ]
 
 
-majorIconLink : Theme -> String -> String -> Html msg
-majorIconLink theme label iconName =
-    majorToolbarLink theme
+majorIconLink : Theme -> Href -> LinkLabel -> IconName -> Html msg
+majorIconLink theme url label iconName =
+    majorToolbarLink theme url
         [ icon iconName ]
 
 
-circularIconLink : Theme -> String -> String -> Html msg
-circularIconLink theme label iconName =
-    circularToolbarLink theme
+circularIconLink : Theme -> Href -> LinkLabel -> IconName -> Html msg
+circularIconLink theme url label iconName =
+    circularToolbarLink theme url
         [ icon iconName ]
+
+
+
+-- HELPERS
+
+
+linkWrapper : List (Html msg) -> List (Html msg)
+linkWrapper content =
+    [ div [ css [ margin2 (rem 0) (rem 1) ] ] content ]

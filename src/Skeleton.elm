@@ -166,7 +166,7 @@ viewHeader segments theme =
         theme
         { logo =
             [ viewLogo theme
-            , div [ css [ marginLeft auto ] ] [ ni "Menu" "menu" ]
+            , div [ css [ marginLeft auto ] ] [ ni "/panel" "Menu" "menu" ]
             ]
         , navigation =
             [ viewTimelineNavigation theme
@@ -196,10 +196,10 @@ viewTimelineNavigation theme =
         [ css
             [ displayFlex ]
         ]
-        [ n "Home" "home"
-        , n "Local" "paper-airplane"
-        , n "Federated" "planet"
-        , n "Notifications" "ios-bell"
+        [ n "/" "Home" "home"
+        , n "/local" "Local" "paper-airplane"
+        , n "/federated" "Federated" "planet"
+        , n "/notifications" "Notifications" "ios-bell"
         ]
 
 
@@ -219,9 +219,10 @@ viewAdvancedNavigation theme =
         [ css
             [ displayFlex ]
         ]
-        [ n "Direct Messages" "email-unread"
-        , nm "Search" "search"
-        , nc "Create" "flash"
+        [ n "/inbox" "Direct Messages" "email-unread"
+        , nm "/search" "Search" "search"
+        , nc "/create" "Create" "flash"
+        , n "/lock" "Lock" "android-lock"
         ]
 
 
