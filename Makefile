@@ -74,3 +74,4 @@ release:
 		@git add dist/*
 		@git commit -m "RELEASE: Build"
 		@git subtree push --prefix dist origin gh-pages
+		@git checkout master
