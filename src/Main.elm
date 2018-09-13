@@ -19,10 +19,15 @@ import Json.Encode as Encode
 import Mastodon.Url
 import OAuth exposing (Token)
 import OAuth.AuthorizationCode
-import Page.Home as Home
-import Page.Problem as Problem
-import Page.SignIn as SignIn
-import Page.SignIn.Error
+import Page.Create as CreatePage
+import Page.Home as HomePage exposing (TimelineMode(..))
+import Page.Inbox as InboxPage
+import Page.Lock as LockPage
+import Page.Notification as NotificationPage
+import Page.Problem as ProblemPage
+import Page.Search as SearchPage
+import Page.SignIn as SignInPage
+import Page.SignIn.Error as SignInPageError
 import Ports
 import Skeleton exposing (Details)
 import Theme exposing (Palette, Theme, createTheme)
@@ -50,7 +55,12 @@ type Page
     = NotFound
     | SignIn
     | Fetching
-    | Home Home.Model
+    | Create CreatePage.Model
+    | Home HomePage.Model
+    | Inbox InboxPage.Model
+    | Lock LockPage.Model
+    | Notification NotificationPage.Model
+    | Search SearchPage.Model
 
 
 main : Program Flags Model Msg
@@ -87,7 +97,7 @@ view ({ auth, theme } as model) =
                     { title = "Not Found"
                     , header = []
                     , warning = Skeleton.NoProblems
-                    , kids = Problem.notFound theme
+                    , kids = ProblemPage.notFound theme
                     , css = []
                     , theme = theme
                     }
@@ -112,21 +122,41 @@ view ({ auth, theme } as model) =
                     , header = []
                     , warning = Skeleton.NoProblems
                     , kids =
-                        [ SignIn.viewFetching theme ]
+                        [ SignInPage.viewFetching theme ]
                     , css = []
                     , theme = theme
                     }
 
+        Create create ->
+            toUnstyledDocument <|
+                Skeleton.view CreateMsg (CreatePage.view create theme)
+
         Home home ->
             toUnstyledDocument <|
-                Skeleton.view HomeMsg (Home.view home theme)
+                Skeleton.view HomeMsg (HomePage.view home theme)
+
+        Inbox inbox ->
+            toUnstyledDocument <|
+                Skeleton.view InboxMsg (InboxPage.view inbox theme)
+
+        Lock lock ->
+            toUnstyledDocument <|
+                Skeleton.view LockMsg (LockPage.view lock theme)
+
+        Notification notification ->
+            toUnstyledDocument <|
+                Skeleton.view NotificationMsg (NotificationPage.view notification theme)
+
+        Search search ->
+            toUnstyledDocument <|
+                Skeleton.view SearchMsg (SearchPage.view search theme)
 
 
 signInView : Theme -> Auth -> Html Msg
 signInView theme auth =
-    SignIn.view theme
+    SignInPage.view theme
         { buttons =
-            [ SignIn.viewSignInButton auth SetInstance (onClick (SignInRequested SignIn.configuration))
+            [ SignInPage.viewSignInButton auth SetInstance (onClick (SignInRequested SignInPage.configuration))
             ]
         , onSignOut = SignOutRequested
         }
@@ -196,8 +226,18 @@ type
     = LinkClicked Browser.UrlRequest
       -- Trigger after an URL chang, external navigation (back/forward)
     | UrlChanged Url.Url
+      -- The "create" button has been hit
+    | CreateMsg CreatePage.Msg
       -- The "home timeline" button has been hit
-    | HomeMsg Home.Msg
+    | HomeMsg HomePage.Msg
+      -- The "inbox" button has been hit
+    | InboxMsg InboxPage.Msg
+      -- The "lock" button has been hit
+    | LockMsg LockPage.Msg
+      -- The "notification" button has been hit
+    | NotificationMsg NotificationPage.Msg
+      -- The "search" button has been hit
+    | SearchMsg SearchPage.Msg
       -- Set the current instance name
     | SetInstance String
       -- The 'sign-in' button has been hit
@@ -228,10 +268,50 @@ update message ({ auth } as model) =
         UrlChanged url ->
             stepUrl url model
 
+        CreateMsg msg ->
+            case model.page of
+                Create create ->
+                    stepCreate model (CreatePage.update msg create)
+
+                _ ->
+                    ( model, Cmd.none )
+
         HomeMsg msg ->
             case model.page of
                 Home home ->
-                    stepHome model (Home.update msg home)
+                    stepHome model (HomePage.update msg home)
+
+                _ ->
+                    ( model, Cmd.none )
+
+        InboxMsg msg ->
+            case model.page of
+                Inbox inbox ->
+                    stepInbox model (InboxPage.update msg inbox)
+
+                _ ->
+                    ( model, Cmd.none )
+
+        LockMsg msg ->
+            case model.page of
+                Lock lock ->
+                    stepLock model (LockPage.update msg lock)
+
+                _ ->
+                    ( model, Cmd.none )
+
+        NotificationMsg msg ->
+            case model.page of
+                Notification notification ->
+                    stepNotification model (NotificationPage.update msg notification)
+
+                _ ->
+                    ( model, Cmd.none )
+
+        SearchMsg msg ->
+            case model.page of
+                Search search ->
+                    stepSearch model (SearchPage.update msg search)
 
                 _ ->
                     ( model, Cmd.none )
@@ -266,7 +346,7 @@ update message ({ auth } as model) =
                         Ok { error, errorDescription } ->
                             let
                                 errMsg =
-                                    "Unable to retrieve token: " ++ Page.SignIn.Error.toString { error = error, errorDescription = errorDescription }
+                                    "Unable to retrieve token: " ++ SignInPageError.toString { error = error, errorDescription = errorDescription }
                             in
                             ( updateAuthError model (Just errMsg)
                             , Cmd.none
@@ -445,11 +525,68 @@ route parser handler =
 protectedUrl : Url.Url -> Model -> Token -> Account -> ( Model, Cmd Msg )
 protectedUrl url model token account =
     let
+        goHome =
+            stepHome model
+                (HomePage.init model.key
+                    HomeTimeline
+                    { instance = model.auth.instance
+                    , token = token
+                    , account = account
+                    }
+                )
+
         parser =
             oneOf
                 [ route top
-                    (stepHome model
-                        (Home.init model.key
+                    goHome
+                , route (s "local")
+                    goHome
+                , route (s "federated")
+                    goHome
+                , route (s "create")
+                    (stepCreate
+                        model
+                        (CreatePage.init model.key
+                            { instance = model.auth.instance
+                            , token = token
+                            , account = account
+                            }
+                        )
+                    )
+                , route (s "inbox")
+                    (stepInbox
+                        model
+                        (InboxPage.init model.key
+                            { instance = model.auth.instance
+                            , token = token
+                            , account = account
+                            }
+                        )
+                    )
+                , route (s "lock")
+                    (stepLock
+                        model
+                        (LockPage.init model.key
+                            { instance = model.auth.instance
+                            , token = token
+                            , account = account
+                            }
+                        )
+                    )
+                , route (s "notifications")
+                    (stepNotification
+                        model
+                        (NotificationPage.init model.key
+                            { instance = model.auth.instance
+                            , token = token
+                            , account = account
+                            }
+                        )
+                    )
+                , route (s "search")
+                    (stepSearch
+                        model
+                        (SearchPage.init model.key
                             { instance = model.auth.instance
                             , token = token
                             , account = account
@@ -492,11 +629,11 @@ stepSignIn ({ auth } as model) url =
 
             else
                 ( { model | page = Fetching }
-                , getAccessToken auth SignIn.configuration auth.redirectUri code
+                , getAccessToken auth SignInPage.configuration auth.redirectUri code
                 )
 
         OAuth.AuthorizationCode.Error { error, errorDescription } ->
-            ( updateAuthError model (Just <| Page.SignIn.Error.toString { error = error, errorDescription = errorDescription })
+            ( updateAuthError model (Just <| SignInPageError.toString { error = error, errorDescription = errorDescription })
             , Cmd.none
             )
 
@@ -508,10 +645,45 @@ stepFetching model =
     )
 
 
-stepHome : Model -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg )
+stepCreate : Model -> ( CreatePage.Model, Cmd CreatePage.Msg ) -> ( Model, Cmd Msg )
+stepCreate model ( create, cmds ) =
+    ( { model | page = Create create }
+    , Cmd.map CreateMsg cmds
+    )
+
+
+stepHome : Model -> ( HomePage.Model, Cmd HomePage.Msg ) -> ( Model, Cmd Msg )
 stepHome model ( home, cmds ) =
     ( { model | page = Home home }
     , Cmd.map HomeMsg cmds
+    )
+
+
+stepInbox : Model -> ( InboxPage.Model, Cmd InboxPage.Msg ) -> ( Model, Cmd Msg )
+stepInbox model ( inbox, cmds ) =
+    ( { model | page = Inbox inbox }
+    , Cmd.map InboxMsg cmds
+    )
+
+
+stepLock : Model -> ( LockPage.Model, Cmd LockPage.Msg ) -> ( Model, Cmd Msg )
+stepLock model ( lock, cmds ) =
+    ( { model | page = Lock lock }
+    , Cmd.map LockMsg cmds
+    )
+
+
+stepNotification : Model -> ( NotificationPage.Model, Cmd NotificationPage.Msg ) -> ( Model, Cmd Msg )
+stepNotification model ( notification, cmds ) =
+    ( { model | page = Notification notification }
+    , Cmd.map NotificationMsg cmds
+    )
+
+
+stepSearch : Model -> ( SearchPage.Model, Cmd SearchPage.Msg ) -> ( Model, Cmd Msg )
+stepSearch model ( search, cmds ) =
+    ( { model | page = Search search }
+    , Cmd.map SearchMsg cmds
     )
 
 

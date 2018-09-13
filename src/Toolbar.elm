@@ -24,8 +24,10 @@ type alias LinkLabel =
 type alias IconName =
     String
 
+
 type alias Href =
     String
+
 
 
 -- TOOLBAR
@@ -111,31 +113,36 @@ circularToolbarLink theme url content =
 
 navigationLink : Theme -> Href -> LinkLabel -> IconName -> Html msg
 navigationLink theme url label iconName =
-    toolbarLink theme url
+    toolbarLink theme
+        url
         [ iconWithLabel iconName label ]
 
 
 iconLink : Theme -> Href -> LinkLabel -> IconName -> Html msg
 iconLink theme url label iconName =
-    toolbarLink theme url
+    toolbarLink theme
+        url
         [ icon iconName ]
 
 
 inversedIconLink : Theme -> Href -> LinkLabel -> IconName -> Html msg
 inversedIconLink theme url label iconName =
-    inversedToolbarLink theme url
+    inversedToolbarLink theme
+        url
         [ icon iconName ]
 
 
 majorIconLink : Theme -> Href -> LinkLabel -> IconName -> Html msg
 majorIconLink theme url label iconName =
-    majorToolbarLink theme url
+    majorToolbarLink theme
+        url
         [ icon iconName ]
 
 
 circularIconLink : Theme -> Href -> LinkLabel -> IconName -> Html msg
 circularIconLink theme url label iconName =
-    circularToolbarLink theme url
+    circularToolbarLink theme
+        url
         [ icon iconName ]
 
 

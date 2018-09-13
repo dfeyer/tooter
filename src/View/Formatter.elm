@@ -95,6 +95,7 @@ getMentionForLink attrs mentions =
         Nothing ->
             Nothing
 
+
 createLinkNode : List ( String, String ) -> List HtmlParser.Node -> List Mention -> Html msg
 createLinkNode attrs children mentions =
     case getMentionForLink attrs mentions of

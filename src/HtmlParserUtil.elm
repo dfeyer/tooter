@@ -1,22 +1,25 @@
-module HtmlParserUtil exposing (..)
+module HtmlParserUtil exposing (textContent, textContentEach)
 
 import Html.Parser exposing (Node(..))
 
+
+
 -- Hack, need to contribute this upstream
+
 
 textContent : List Node -> String
 textContent nodes =
-  String.join "" (List.map textContentEach nodes)
+    String.join "" (List.map textContentEach nodes)
 
 
 textContentEach : Node -> String
 textContentEach node =
-  case node of
-    Element _ _ children ->
-      textContent children
+    case node of
+        Element _ _ children ->
+            textContent children
 
-    Text s ->
-      s
+        Text s ->
+            s
 
-    Comment s ->
-      ""
+        Comment s ->
+            ""

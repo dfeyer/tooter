@@ -1,6 +1,7 @@
 module Page.Home exposing
     ( Model
     , Msg
+    , TimelineMode(..)
     , init
     , update
     , view
@@ -19,9 +20,9 @@ import OAuth exposing (Token)
 import RemoteData exposing (RemoteData(..), WebData)
 import Request.Timeline exposing (homeTimeline)
 import Skeleton
-import View.Status exposing (viewStatus)
 import Theme exposing (Theme)
 import Type exposing (Account, Auth, Client, Status)
+import View.Status exposing (viewStatus)
 
 
 
@@ -31,18 +32,25 @@ import Type exposing (Account, Auth, Client, Status)
 type alias Model =
     { title : String
     , key : Key
+    , timelineMode : TimelineMode
     , client : Client
     , timeline : Timeline
     }
+
+
+type TimelineMode
+    = HomeTimeline
+    | LocalTimeline
+    | FederatedTimeline
 
 
 type alias Timeline =
     WebData (List Status)
 
 
-init : Key -> Client -> ( Model, Cmd Msg )
-init key ({ instance, token } as client) =
-    ( Model "Welcome on the Fediverse..." key client NotAsked
+init : Key -> TimelineMode -> Client -> ( Model, Cmd Msg )
+init key timelineMode ({ instance, token } as client) =
+    ( Model "Welcome on the Fediverse..." key timelineMode client NotAsked
     , homeTimeline instance token (Decode.list statusDecoder) |> Cmd.map TimelineUpdated
     )
 
@@ -64,7 +72,7 @@ update msg model =
             ( model, Cmd.none )
 
         Navigate href ->
-            ( model, pushUrl model.key href)
+            ( model, pushUrl model.key href )
 
         TimelineUpdated timeline ->
             ( { model | timeline = timeline }

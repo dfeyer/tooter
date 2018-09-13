@@ -1,0 +1,86 @@
+module Page.Search exposing
+    ( Model
+    , Msg
+    , init
+    , update
+    , view
+    )
+
+import Browser.Navigation exposing (Key, pushUrl)
+import Css exposing (..)
+import Css.Transitions exposing (easeInOut, transition)
+import Html.Styled exposing (..)
+import Html.Styled.Attributes exposing (css, href, src)
+import Icon exposing (icon)
+import Image exposing (accountImage, circularAccountImage)
+import Json.Decode as Decode
+import Mastodon.Decoder exposing (statusDecoder)
+import OAuth exposing (Token)
+import RemoteData exposing (RemoteData(..), WebData)
+import Request.Timeline exposing (homeTimeline)
+import Skeleton
+import Theme exposing (Theme)
+import Type exposing (Account, Auth, Client, Status)
+import View.Status exposing (viewStatus)
+
+
+
+-- MODEL
+
+
+type alias Model =
+    { title : String
+    , key : Key
+    , client : Client
+    }
+
+
+init : Key -> Client -> ( Model, Cmd Msg )
+init key ({ instance, token } as client) =
+    ( Model "Notifications" key client
+    , Cmd.none
+    )
+
+
+
+-- UPDATE
+
+
+type Msg
+    = NoOp
+
+
+update : Msg -> Model -> ( Model, Cmd msg )
+update msg model =
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
+
+
+-- VIEW
+
+
+view : Model -> Theme -> Skeleton.Details Msg
+view model theme =
+    { title = "🌎 " ++ model.title ++ " / Tooter"
+    , header = []
+    , warning = Skeleton.NoProblems
+    , kids = [ viewContent theme model ]
+    , css =
+        [ minHeight (vh 100)
+        , paddingTop (rem 2.5)
+        ]
+    , theme = theme
+    }
+
+
+viewContent : Theme -> Model -> Html Msg
+viewContent theme model =
+    div
+        [ css
+            [ displayFlex
+            ]
+        ]
+        [ div [] [ text "Let's go..." ]
+        ]
