@@ -1,6 +1,7 @@
 module Type exposing
     ( Account
     , Application
+    , Aside
     , Attachment
     , Auth
     , Client
@@ -9,6 +10,7 @@ module Type exposing
     , Mention
     , OAuthConfiguration
     , Reblog(..)
+    , Sidebar
     , Status
     , StatusId(..)
     , Tag
@@ -17,6 +19,7 @@ module Type exposing
     )
 
 import Browser.Navigation as Nav exposing (Key)
+import Html.Styled exposing (Html)
 import Json.Decode as Json
 import OAuth exposing (Token)
 import Theme exposing (Theme)
@@ -26,6 +29,14 @@ import Url exposing (Url)
 
 
 --- TYPES
+
+
+type alias Sidebar msg =
+    List (Html msg)
+
+
+type alias Aside msg =
+    List (Html msg)
 
 
 type alias InputInformation =

@@ -67,6 +67,8 @@ view model theme =
     , header = []
     , warning = Skeleton.NoProblems
     , kids = [ viewContent theme model ]
+    , sidebar = []
+    , aside = []
     , css =
         [ minHeight (vh 100)
         , paddingTop (rem 2.5)

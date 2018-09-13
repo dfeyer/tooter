@@ -9,6 +9,7 @@ import Html.Styled.Attributes exposing (class, css, href, id)
 import Html.Styled.Lazy exposing (lazy)
 import Theme exposing (Palette, Theme)
 import Toolbar exposing (circularIconLink, iconLink, inversedIconLink, majorIconLink, navigationLink)
+import Type exposing (Aside, Sidebar)
 
 
 
@@ -21,6 +22,8 @@ type alias Details msg =
     , warning : Warning
     , css : List Style
     , kids : List (Html msg)
+    , sidebar : Sidebar msg
+    , aside : Aside msg
     , theme : Theme
     }
 

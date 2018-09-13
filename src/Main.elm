@@ -98,6 +98,8 @@ view ({ auth, theme } as model) =
                     , header = []
                     , warning = Skeleton.NoProblems
                     , kids = ProblemPage.notFound theme
+                    , sidebar = []
+                    , aside = []
                     , css = []
                     , theme = theme
                     }
@@ -111,6 +113,8 @@ view ({ auth, theme } as model) =
                     , kids =
                         [ signInView theme auth
                         ]
+                    , sidebar = []
+                    , aside = []
                     , css = []
                     , theme = theme
                     }
@@ -123,6 +127,8 @@ view ({ auth, theme } as model) =
                     , warning = Skeleton.NoProblems
                     , kids =
                         [ SignInPage.viewFetching theme ]
+                    , sidebar = []
+                    , aside = []
                     , css = []
                     , theme = theme
                     }

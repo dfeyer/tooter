@@ -21,7 +21,10 @@ import Request.Timeline exposing (homeTimeline)
 import Skeleton
 import Theme exposing (Theme)
 import Type exposing (Account, Auth, Client, Status)
+import View.Account as Account
 import View.Status exposing (viewStatus)
+import View.WhoToFollow as WhoToFollow
+import View.Zone as Zone
 
 
 
@@ -67,6 +70,8 @@ view model theme =
     , header = []
     , warning = Skeleton.NoProblems
     , kids = [ viewContent theme model ]
+    , sidebar = []
+    , aside = []
     , css =
         [ minHeight (vh 100)
         , paddingTop (rem 2.5)
@@ -76,11 +81,13 @@ view model theme =
 
 
 viewContent : Theme -> Model -> Html Msg
-viewContent theme model =
+viewContent theme { client } =
     div
         [ css
             [ displayFlex
             ]
         ]
-        [ div [] [ text "Let's go..." ]
+        [ Zone.sidebar theme (Account.view theme client.account)
+        , Zone.mainArea theme [ div [] [ text "Notification..." ] ]
+        , Zone.aside theme (WhoToFollow.view theme client.account)
         ]
