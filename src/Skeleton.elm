@@ -53,8 +53,8 @@ view toMsg details =
         [ div
             [ id "app"
             , css
-                [ width (rem 65)
-                , maxWidth (pct 75)
+                [ maxWidth (rem 75)
+                , margin2 (rem 0) (rem 4)
                 , backgroundColor details.theme.colors.appBackground
                 ]
             ]
