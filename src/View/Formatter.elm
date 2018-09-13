@@ -107,7 +107,7 @@ createLinkNode attrs children mentions =
                 (toVirtualDom mentions children)
 
         Nothing ->
-            case Debug.log "Foo" (getHashtagForLink attrs) of
+            case getHashtagForLink attrs of
                 Just hashtag ->
                     Html.Styled.node "a"
                         (List.map toAttribute attrs

@@ -12,6 +12,7 @@ module Type exposing
     , Reblog(..)
     , Sidebar
     , Status
+    , Timeline
     , StatusId(..)
     , Tag
     , initAuth
@@ -22,6 +23,7 @@ import Browser.Navigation as Nav exposing (Key)
 import Html.Styled exposing (Html)
 import Json.Decode as Json
 import OAuth exposing (Token)
+import RemoteData exposing (WebData)
 import Theme exposing (Theme)
 import Time exposing (Posix)
 import Url exposing (Url)
@@ -85,6 +87,8 @@ type alias OAuthConfiguration =
     , accountDecoder : Json.Decoder Account
     }
 
+type alias Timeline =
+    WebData (List Status)
 
 type alias Instance =
     String

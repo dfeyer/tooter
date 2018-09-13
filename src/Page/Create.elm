@@ -21,9 +21,9 @@ import Request.Timeline exposing (homeTimeline)
 import Skeleton
 import Theme exposing (Theme)
 import Type exposing (Account, Auth, Client, Status)
-import View.Status exposing (viewStatus)
+import View.Status exposing (view)
 import View.Account as Account
-import View.Status exposing (viewStatus)
+import View.Status exposing (view)
 import View.WhoToFollow as WhoToFollow
 import View.Zone as Zone
 

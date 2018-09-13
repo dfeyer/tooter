@@ -138,7 +138,7 @@ headerWrapper segments theme { logo, navigation } =
                 [ displayFlex
                 , justifyContent spaceBetween
                 , flex (int 1)
-                , fontSize (rem 1.6)
+                , fontSize (rem 1.4)
                 ]
             ]
             navigation
@@ -202,6 +202,7 @@ viewTimelineNavigation theme =
         [ n "/" "Home" "home"
         , n "/local" "Local" "paper-airplane"
         , n "/federated" "Federated" "planet"
+        , n "/favorites" "Favorites" "star"
         , n "/notifications" "Notifications" "ios-bell"
         ]
 

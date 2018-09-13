@@ -528,27 +528,51 @@ route parser handler =
     Parser.map handler parser
 
 
+goHome : Model -> Token -> Account -> TimelineMode -> ( Model, Cmd Msg )
+goHome model token account msg =
+    stepHome model
+        (HomePage.init model.key
+            msg
+            { instance = model.auth.instance
+            , token = token
+            , account = account
+            }
+        )
+
+
 protectedUrl : Url.Url -> Model -> Token -> Account -> ( Model, Cmd Msg )
 protectedUrl url model token account =
     let
-        goHome =
-            stepHome model
-                (HomePage.init model.key
-                    HomeTimeline
-                    { instance = model.auth.instance
-                    , token = token
-                    , account = account
-                    }
-                )
-
         parser =
             oneOf
                 [ route top
-                    goHome
+                    (goHome
+                        model
+                        token
+                        account
+                        HomeTimeline
+                    )
                 , route (s "local")
-                    goHome
+                    (goHome
+                        model
+                        token
+                        account
+                        LocalTimeline
+                    )
                 , route (s "federated")
-                    goHome
+                    (goHome
+                        model
+                        token
+                        account
+                        FederatedTimeline
+                    )
+                , route (s "favorites")
+                    (goHome
+                        model
+                        token
+                        account
+                        FavoritesTimeline
+                    )
                 , route (s "create")
                     (stepCreate
                         model

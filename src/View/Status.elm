@@ -1,4 +1,4 @@
-module View.Status exposing (viewStatus)
+module View.Status exposing (view, viewTimeline)
 
 import Css exposing (..)
 import Css.Transitions exposing (easeInOut, transition)
@@ -6,13 +6,14 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, href)
 import Icon exposing (icon)
 import Image exposing (smallAccountImage)
+import RemoteData exposing (RemoteData(..))
 import Theme exposing (Theme)
 import Type exposing (..)
 import View.Formatter exposing (formatContent)
 
 
-viewStatus : Theme -> Status -> Html msg
-viewStatus theme { account, content, mentions } =
+view : Theme -> Status -> Html msg
+view theme { account, content, mentions } =
     div
         [ css
             [ displayFlex
@@ -27,6 +28,24 @@ viewStatus theme { account, content, mentions } =
             ]
         ]
 
+viewTimeline : Theme -> Timeline -> List (Html msg)
+viewTimeline theme timeline =
+    [ case timeline of
+        NotAsked ->
+            div [] [ text "Initialising..." ]
+
+        Loading ->
+            div [] [ text "Loading..." ]
+
+        Failure _ ->
+            div [] [ text "Oups... something bad happens. We are sorry, but not perfect. Maybe try again?" ]
+
+        Success list ->
+            if (List.isEmpty list) then
+                div [] [ text "Nothing to show..." ]
+            else
+                div [] (List.map (view theme) list)
+    ]
 
 statusContent : Theme -> String -> List Mention -> Html msg
 statusContent theme content mentions =
