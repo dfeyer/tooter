@@ -40,7 +40,7 @@ accountSuggestion theme maybeImage =
             [ css
                 [ displayFlex
                 , cursor pointer
-                , backgroundColor theme.colors.lightBackground
+                , backgroundColor theme.colors.mediumBackground
                 , borderRadius (rem 1.25)
                 , width (rem 8)
                 , height (rem 2)
