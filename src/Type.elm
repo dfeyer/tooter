@@ -1,10 +1,13 @@
 module Type exposing
     ( Account
+    , AppRegistration
     , Application
     , Aside
     , Attachment
     , Auth
     , Client
+    , ClientId
+    , ClientSecret
     , InputInformation
     , Instance
     , Mention
@@ -12,9 +15,10 @@ module Type exposing
     , Reblog(..)
     , Sidebar
     , Status
-    , Timeline
+    , Scope
     , StatusId(..)
     , Tag
+    , Timeline
     , initAuth
     , resumeAuth
     )
@@ -24,13 +28,34 @@ import Html.Styled exposing (Html)
 import Json.Decode as Json
 import OAuth exposing (Token)
 import RemoteData exposing (WebData)
+import Json.Decode exposing (Decoder)
 import Theme exposing (Theme)
 import Time exposing (Posix)
-import Url exposing (Url)
+import Url exposing (Protocol(..), Url)
 
 
 
 --- TYPES
+
+type alias Scope =
+    String
+
+type alias ClientId =
+    String
+
+
+type alias ClientSecret =
+    String
+
+
+type alias AppRegistration =
+    { instance : Instance
+    , scope : String
+    , clientId : String
+    , clientSecret : ClientSecret
+    , id : String
+    , redirectUri : Url
+    }
 
 
 type alias Sidebar msg =
@@ -48,47 +73,46 @@ type alias InputInformation =
 
 
 type alias Auth =
-    { redirectUri : Url
-    , error : Maybe String
+    { error : Maybe String
     , token : Maybe Token
     , account : Maybe Account
     , state : String
-    , instance : Instance
+    , configuration : OAuthConfiguration
     }
 
 
-initAuth : String -> Url -> Auth
-initAuth bytes url =
-    { redirectUri = { url | query = Nothing, fragment = Nothing }
-    , error = Nothing
+initAuth : Url -> OAuthConfiguration -> String -> Auth
+initAuth url configuration bytes =
+    { error = Nothing
     , token = Nothing
     , account = Nothing
     , state = bytes
-    , instance = "social.ttree.docker"
+    , configuration = configuration
     }
 
 
-resumeAuth : Client -> String -> Url -> Auth
-resumeAuth { instance, token, account } bytes url =
+resumeAuth : Url -> OAuthConfiguration -> Client -> String -> Auth
+resumeAuth url configuration { instance, token, account } bytes =
     let
         a =
-            initAuth bytes url
+            initAuth url configuration bytes
     in
-    { a | instance = instance, token = Just token, account = Just account }
+    { a | token = Just token, account = Just account }
 
 
 type alias OAuthConfiguration =
     { authorizationEndpoint : Url
     , tokenEndpoint : Url
     , accountEndpoint : Url
-    , clientId : String
-    , clientSecret : String
     , scope : List String
     , accountDecoder : Json.Decoder Account
+    , redirectUri : Url
     }
+
 
 type alias Timeline =
     WebData (List Status)
+
 
 type alias Instance =
     String

@@ -4,6 +4,7 @@ import Base64
 import Browser
 import Browser.Navigation as Nav exposing (Key, pushUrl)
 import Css exposing (maxWidth, pct, rem, width)
+import Decoder exposing (clientListDecoder, tokenDecoder)
 import Document exposing (Document, toUnstyledDocument)
 import Html
 import Html.Styled exposing (Html, button, div, text, toUnstyled)
@@ -15,9 +16,9 @@ import Iso8601
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (required)
 import Json.Encode as Encode
-import Mastodon.Url
-import Mastodon.Encoder exposing (accountEncoder)
-import Mastodon.Decoder exposing (accountDecoder)
+import Mastodon.Decoder exposing (accountDecoder, appRegistrationDecoder, resumeAppRegistrationDecoder)
+import Mastodon.Encoder exposing (accountEncoder, appRegistrationEncoder, saveAppRegistrationEncoder)
+import Mastodon.Url as Api
 import OAuth exposing (Token)
 import OAuth.AuthorizationCode
 import Page.Create as CreatePage
@@ -30,10 +31,10 @@ import Page.Search as SearchPage
 import Page.SignIn as SignInPage
 import Page.SignIn.Error as SignInPageError
 import Ports
+import Request.Timeline exposing (instanceUrl)
 import Skeleton exposing (Details)
 import Theme exposing (Palette, Theme, createTheme)
-import Token
-import Type exposing (Account, Auth, Client, OAuthConfiguration, initAuth, resumeAuth)
+import Type exposing (Account, AppRegistration, Auth, Client, Instance, OAuthConfiguration, initAuth, resumeAuth)
 import Url exposing (Protocol(..), Url)
 import Url.Parser as Parser exposing ((</>), Parser, custom, fragment, map, oneOf, s, top)
 
@@ -41,14 +42,17 @@ import Url.Parser as Parser exposing ((</>), Parser, custom, fragment, map, oneO
 type alias Flags =
     { randomBytes : String
     , clients : String
+    , registration : String
     }
 
 
 type alias Model =
     { key : Key
+    , currentInstance : Maybe Instance
     , page : Page
     , theme : Theme
     , auth : Auth
+    , appRegistration : Maybe AppRegistration
     }
 
 
@@ -90,7 +94,7 @@ subscriptions model =
 
 
 view : Model -> Browser.Document Msg
-view ({ auth, theme } as model) =
+view ({ auth, theme, appRegistration } as model) =
     case model.page of
         NotFound ->
             toUnstyledDocument <|
@@ -112,7 +116,7 @@ view ({ auth, theme } as model) =
                     , header = []
                     , warning = Skeleton.NoProblems
                     , kids =
-                        [ signInView theme auth
+                        [ signInView theme (Maybe.withDefault "" model.currentInstance) auth
                         ]
                     , sidebar = []
                     , aside = []
@@ -159,11 +163,11 @@ view ({ auth, theme } as model) =
                 Skeleton.view SearchMsg (SearchPage.view search theme)
 
 
-signInView : Theme -> Auth -> Html Msg
-signInView theme auth =
+signInView : Theme -> Instance -> Auth -> Html Msg
+signInView theme instance auth =
     SignInPage.view theme
         { buttons =
-            [ SignInPage.viewSignInButton auth SetInstance (onClick (SignInRequested SignInPage.configuration))
+            [ SignInPage.viewSignInButton instance SetInstance (onClick (AppRegistrationRequested auth.configuration))
             ]
         , onSignOut = SignOutRequested
         }
@@ -176,6 +180,7 @@ signInView theme auth =
 
 type Error
     = InvalidToken String
+    | InvalidAppRegistration String
 
 
 resumeClient : String -> Result Error (Maybe Client)
@@ -196,31 +201,81 @@ resumeClient clients =
             Err (InvalidToken "Unable to decode stored account and token")
 
 
+resumeRegistration : Url -> String -> Result Error (Maybe AppRegistration)
+resumeRegistration url r =
+    if r == "" then
+        Ok Nothing
+    else
+        case Base64.decode r of
+            Ok r_ ->
+                case
+                    Decode.decodeString (resumeAppRegistrationDecoder url) r_
+                of
+                    Ok a ->
+                        Ok (Just a)
+
+                    Err _ ->
+                        Err (InvalidAppRegistration "Unable to parse stored app registration")
+
+            Err _ ->
+                Err (InvalidAppRegistration "Unable to decode stored app registration")
+
+
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init { randomBytes, clients } url key =
+init { randomBytes, clients, registration } url key =
     let
-        client =
-            resumeClient clients
+        appRegistration =
+            case (resumeRegistration { url | path = "", query = Nothing, fragment = Nothing } registration) of
+                Ok a ->
+                    a
+                Err _ ->
+                    Nothing
+
+        oAuthConfiguration =
+            initOAuthConfiguration url
 
         auth =
             case resumeClient clients of
                 Ok maybeClient ->
                     case maybeClient of
-                        Just c ->
-                            resumeAuth c randomBytes url
+                        Just a ->
+                            resumeAuth url oAuthConfiguration a randomBytes
 
                         Nothing ->
-                            initAuth randomBytes url
+                            initAuth url oAuthConfiguration randomBytes
 
                 Err _ ->
-                    initAuth randomBytes url
+                    initAuth url oAuthConfiguration randomBytes
     in
     stepUrl url
         { key = key
         , page = SignIn
+        , currentInstance = Just "social.ttree.docker"
         , theme = createTheme
         , auth = auth
+        , appRegistration = appRegistration
         }
+
+
+initOAuthConfiguration : Url -> OAuthConfiguration
+initOAuthConfiguration url =
+    let
+        defaultHttpsUrl =
+            { protocol = Https
+            , host = ""
+            , port_ = Nothing
+            , path = ""
+            , query = Nothing
+            , fragment = Nothing
+            }
+    in
+    { authorizationEndpoint = { defaultHttpsUrl | path = Api.oauthAuthorize }
+    , tokenEndpoint = { defaultHttpsUrl | path = Api.oauthToken }
+    , accountEndpoint = { defaultHttpsUrl | path = Api.userAccount }
+    , scope = [ "read", "write", "follow" ]
+    , accountDecoder = accountDecoder
+    , redirectUri = { url | query = Nothing, fragment = Nothing }
+    }
 
 
 
@@ -231,6 +286,10 @@ type
     Msg
     -- Trigger when the user click on link, default navigation
     = LinkClicked Browser.UrlRequest
+      -- Start OAuth2 Application registration
+    | AppRegistrationRequested OAuthConfiguration
+      -- OAuth2 Application registred
+    | SignInRequested OAuthConfiguration (Result Http.Error AppRegistration)
       -- Trigger after an URL chang, external navigation (back/forward)
     | UrlChanged Url.Url
       -- The "create" button has been hit
@@ -247,18 +306,16 @@ type
     | SearchMsg SearchPage.Msg
       -- Set the current instance name
     | SetInstance String
-      -- The 'sign-in' button has been hit
-    | SignInRequested OAuthConfiguration
       -- The 'sign-out' button has been hit
     | SignOutRequested
       -- Got a response from the googleapis token endpoint
-    | GotAccessToken OAuthConfiguration (Result Http.Error OAuth.AuthorizationCode.AuthenticationSuccess)
+    | GotAccessToken Instance OAuthConfiguration (Result Http.Error OAuth.AuthorizationCode.AuthenticationSuccess)
       -- Got a response from the googleapis info endpoint
-    | GotUserInfo (Result Http.Error Account)
+    | GotUserInfo Instance (Result Http.Error Account)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update message ({ auth } as model) =
+update message ({ auth, appRegistration } as model) =
     case message of
         LinkClicked urlRequest ->
             case urlRequest of
@@ -323,30 +380,56 @@ update message ({ auth } as model) =
                 _ ->
                     ( model, Cmd.none )
 
-        SignInRequested { clientId, authorizationEndpoint, scope } ->
+        SignOutRequested ->
             ( model
-            , { clientId = clientId
-              , redirectUri = auth.redirectUri
-              , scope = scope
-              , state = Just model.auth.state
-              , url = { authorizationEndpoint | host = auth.instance }
-              }
-                |> OAuth.AuthorizationCode.makeAuthUrl
-                |> Url.toString
-                |> Nav.load
+            , Nav.load (Url.toString auth.configuration.redirectUri)
             )
 
         SetInstance value ->
-            ( updateAuthInstance model value
+            ( { model | currentInstance = Just value }
             , Cmd.none
             )
 
-        SignOutRequested ->
-            ( model
-            , Nav.load (Url.toString auth.redirectUri)
-            )
+        AppRegistrationRequested config ->
+            case model.currentInstance of
+                Just a ->
+                    ( { model | page = Fetching }
+                    , registerApp a config
+                    )
 
-        GotAccessToken config res ->
+                Nothing ->
+                    ( updateAuthError model (Just "Please provide a valid instance name to connnect.")
+                    , Cmd.none
+                    )
+
+        SignInRequested { authorizationEndpoint } result ->
+            case result of
+                Ok ({ clientId, redirectUri, scope, instance } as a) ->
+                    ( { model | appRegistration = Just a }
+                    , Cmd.batch
+                        [ saveAppRegistration a
+                        , { clientId = clientId
+                          , url = { authorizationEndpoint | host = instance }
+                          , redirectUri = redirectUri
+                          , scope = String.split " " scope
+                          , state = Just model.auth.state
+                          }
+                            |> OAuth.AuthorizationCode.makeAuthUrl
+                            |> Url.toString
+                            |> Nav.load
+                        ]
+                    )
+
+                Err _ ->
+                    let
+                        modelWithError =
+                            updateAuthError model (Just "Unable to create application, maybe your instance does not support OAuth.")
+                    in
+                    ( { modelWithError | appRegistration = Nothing }
+                    , Cmd.none
+                    )
+
+        GotAccessToken instance config res ->
             case res of
                 Err (Http.BadStatus { body }) ->
                     case Decode.decodeString OAuth.AuthorizationCode.defaultAuthenticationErrorDecoder body of
@@ -371,10 +454,10 @@ update message ({ auth } as model) =
 
                 Ok { token } ->
                     ( updateAuthToken model (Just token)
-                    , getUserInfo auth config token
+                    , getUserInfo instance auth config token
                     )
 
-        GotUserInfo res ->
+        GotUserInfo instance res ->
             case res of
                 Err err ->
                     ( updateAuthError model (Just "Unable to fetch user account ¯\\_(ツ)_/¯")
@@ -387,7 +470,7 @@ update message ({ auth } as model) =
                         [ pushUrl model.key "/"
                         , case auth.token of
                             Just token ->
-                                saveClients [ Client auth.instance token account ]
+                                saveClients [ Client instance token account ]
 
                             _ ->
                                 Cmd.none
@@ -397,18 +480,6 @@ update message ({ auth } as model) =
 
 
 -- UPDATE HELPERS
-
-
-updateAuthInstance : Model -> String -> Model
-updateAuthInstance model value =
-    let
-        c =
-            model.auth
-
-        u =
-            { c | instance = value }
-    in
-    { model | auth = u }
 
 
 updateAuthError : Model -> Maybe String -> Model
@@ -451,15 +522,15 @@ updateAuthAccount model value =
 -- USER INFO
 
 
-getUserInfo : Auth -> OAuthConfiguration -> Token -> Cmd Msg
-getUserInfo auth { accountEndpoint, accountDecoder } token =
-    Http.send GotUserInfo <|
+getUserInfo : Instance -> Auth -> OAuthConfiguration -> Token -> Cmd Msg
+getUserInfo instance auth { accountEndpoint, accountDecoder } token =
+    Http.send (GotUserInfo instance) <|
         Http.request
             { method = "GET"
             , body = Http.emptyBody
             , headers = OAuth.useToken token []
             , withCredentials = False
-            , url = Url.toString { accountEndpoint | host = auth.instance }
+            , url = Url.toString { accountEndpoint | host = instance }
             , expect = Http.expectJson accountDecoder
             , timeout = Nothing
             }
@@ -469,9 +540,27 @@ getUserInfo auth { accountEndpoint, accountDecoder } token =
 -- ACCESS TOKEN
 
 
-getAccessToken : Auth -> OAuthConfiguration -> Url -> String -> Cmd Msg
-getAccessToken auth ({ clientId, clientSecret, tokenEndpoint } as config) redirectUri code =
-    Http.send (GotAccessToken config) <|
+registerApp : Instance -> OAuthConfiguration -> Cmd Msg
+registerApp instance ({ scope, redirectUri } as config) =
+    let
+        scopeAsString =
+            String.concat (List.intersperse " " scope)
+    in
+    Http.send (SignInRequested config) <|
+        Http.request <|
+            { method = "POST"
+            , body = appRegistrationEncoder "Tooter" redirectUri scopeAsString "https://tooter.ttree.space" |> Http.jsonBody
+            , headers = []
+            , withCredentials = False
+            , url = Url.toString (instanceUrl instance Api.apps)
+            , expect = Http.expectJson (appRegistrationDecoder instance scopeAsString)
+            , timeout = Nothing
+            }
+
+
+getAccessToken : AppRegistration -> OAuthConfiguration -> String -> Cmd Msg
+getAccessToken { instance, clientId, clientSecret, redirectUri } ({ tokenEndpoint } as config) code =
+    Http.send (GotAccessToken instance config) <|
         Http.request <|
             OAuth.AuthorizationCode.makeTokenRequest
                 { credentials =
@@ -479,7 +568,7 @@ getAccessToken auth ({ clientId, clientSecret, tokenEndpoint } as config) redire
                     , secret = Just clientSecret
                     }
                 , code = code
-                , url = { tokenEndpoint | host = auth.instance }
+                , url = { tokenEndpoint | host = instance }
                 , redirectUri = redirectUri
                 }
 
@@ -507,17 +596,16 @@ clientEncoder client =
         ]
 
 
-clientDecoder : Decoder Client
-clientDecoder =
-    Decode.succeed Client
-        |> required "instance" Decode.string
-        |> required "token" Token.decoder
-        |> required "account" accountDecoder
+
+-- APP REGISTRATION
 
 
-clientListDecoder : Decoder (List Client)
-clientListDecoder =
-    Decode.list clientDecoder
+saveAppRegistration : AppRegistration -> Cmd Msg
+saveAppRegistration registration =
+    saveAppRegistrationEncoder registration
+        |> toJson
+        |> Base64.encode
+        |> Ports.saveRegistration
 
 
 
@@ -529,46 +617,46 @@ route parser handler =
     Parser.map handler parser
 
 
-goHome : Model -> Token -> Account -> TimelineMode -> ( Model, Cmd Msg )
-goHome model token account msg =
+goHome : Instance -> Model -> Token -> Account -> TimelineMode -> ( Model, Cmd Msg )
+goHome instance model token account msg =
     stepHome model
         (HomePage.init model.key
             msg
-            { instance = model.auth.instance
+            { instance = instance
             , token = token
             , account = account
             }
         )
 
 
-protectedUrl : Url.Url -> Model -> Token -> Account -> ( Model, Cmd Msg )
-protectedUrl url model token account =
+protectedUrl : Url.Url -> Model -> Token -> AppRegistration -> Account -> ( Model, Cmd Msg )
+protectedUrl url model token { instance } account =
     let
         parser =
             oneOf
                 [ route top
-                    (goHome
+                    (goHome instance
                         model
                         token
                         account
                         HomeTimeline
                     )
                 , route (s "local")
-                    (goHome
+                    (goHome instance
                         model
                         token
                         account
                         LocalTimeline
                     )
                 , route (s "federated")
-                    (goHome
+                    (goHome instance
                         model
                         token
                         account
                         FederatedTimeline
                     )
                 , route (s "favorites")
-                    (goHome
+                    (goHome instance
                         model
                         token
                         account
@@ -578,7 +666,7 @@ protectedUrl url model token account =
                     (stepCreate
                         model
                         (CreatePage.init model.key
-                            { instance = model.auth.instance
+                            { instance = instance
                             , token = token
                             , account = account
                             }
@@ -588,7 +676,7 @@ protectedUrl url model token account =
                     (stepInbox
                         model
                         (InboxPage.init model.key
-                            { instance = model.auth.instance
+                            { instance = instance
                             , token = token
                             , account = account
                             }
@@ -598,7 +686,7 @@ protectedUrl url model token account =
                     (stepLock
                         model
                         (LockPage.init model.key
-                            { instance = model.auth.instance
+                            { instance = instance
                             , token = token
                             , account = account
                             }
@@ -608,7 +696,7 @@ protectedUrl url model token account =
                     (stepNotification
                         model
                         (NotificationPage.init model.key
-                            { instance = model.auth.instance
+                            { instance = instance
                             , token = token
                             , account = account
                             }
@@ -618,7 +706,7 @@ protectedUrl url model token account =
                     (stepSearch
                         model
                         (SearchPage.init model.key
-                            { instance = model.auth.instance
+                            { instance = instance
                             , token = token
                             , account = account
                             }
@@ -638,16 +726,16 @@ protectedUrl url model token account =
 
 stepUrl : Url.Url -> Model -> ( Model, Cmd Msg )
 stepUrl url ({ auth } as model) =
-    case ( auth.token, auth.account ) of
-        ( Just token, Just account ) ->
-            protectedUrl url model token account
+    case ( auth.token, auth.account, model.appRegistration ) of
+        ( Just token, Just account, Just app ) ->
+            protectedUrl url model token app account
 
         _ ->
             stepSignIn model url
 
 
 stepSignIn : Model -> Url.Url -> ( Model, Cmd Msg )
-stepSignIn ({ auth } as model) url =
+stepSignIn ({ auth, appRegistration } as model) url =
     case OAuth.AuthorizationCode.parseCode url of
         OAuth.AuthorizationCode.Empty ->
             ( model, Cmd.none )
@@ -660,7 +748,13 @@ stepSignIn ({ auth } as model) url =
 
             else
                 ( { model | page = Fetching }
-                , getAccessToken auth SignInPage.configuration auth.redirectUri code
+                , case appRegistration of
+                    Just app ->
+                        getAccessToken app auth.configuration code
+
+                    Nothing ->
+                        -- todo display an error message in this case, kind of impossible state, maybe refactoring
+                        Cmd.none
                 )
 
         OAuth.AuthorizationCode.Error { error, errorDescription } ->

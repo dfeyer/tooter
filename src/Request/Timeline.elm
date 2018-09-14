@@ -1,4 +1,4 @@
-module Request.Timeline exposing (homeTimeline, accountTimeline, publicTimeline, favouriteTimeline)
+module Request.Timeline exposing (accountTimeline, favouriteTimeline, homeTimeline, instanceUrl, publicTimeline)
 
 import Http
 import Json.Decode exposing (Decoder)
@@ -13,8 +13,8 @@ type alias Path =
     String
 
 
-url : Instance -> Path -> Url
-url instance path =
+instanceUrl : Instance -> Path -> Url
+instanceUrl instance path =
     { protocol = Https
     , host = instance
     , path = path
@@ -31,27 +31,25 @@ homeTimeline instance token decoder =
         , body = Http.emptyBody
         , headers = OAuth.useToken token []
         , withCredentials = False
-        , url = Url.toString (url instance Api.homeTimeline)
+        , url = Url.toString (instanceUrl instance Api.homeTimeline)
         , expect = Http.expectJson decoder
         , timeout = Nothing
         }
         |> RemoteData.sendRequest
 
 
-
 accountTimeline : Instance -> Token -> Account -> Decoder a -> Cmd (WebData a)
-accountTimeline instance token {id} decoder =
+accountTimeline instance token { id } decoder =
     Http.request
         { method = "GET"
         , body = Http.emptyBody
         , headers = OAuth.useToken token []
         , withCredentials = False
-        , url = Url.toString (url instance (Api.accountTimeline id))
+        , url = Url.toString (instanceUrl instance (Api.accountTimeline id))
         , expect = Http.expectJson decoder
         , timeout = Nothing
         }
         |> RemoteData.sendRequest
-
 
 
 publicTimeline : Instance -> Token -> Decoder a -> Cmd (WebData a)
@@ -61,12 +59,11 @@ publicTimeline instance token decoder =
         , body = Http.emptyBody
         , headers = OAuth.useToken token []
         , withCredentials = False
-        , url = Url.toString (url instance Api.publicTimeline)
+        , url = Url.toString (instanceUrl instance Api.publicTimeline)
         , expect = Http.expectJson decoder
         , timeout = Nothing
         }
         |> RemoteData.sendRequest
-
 
 
 favouriteTimeline : Instance -> Token -> Decoder a -> Cmd (WebData a)
@@ -76,7 +73,7 @@ favouriteTimeline instance token decoder =
         , body = Http.emptyBody
         , headers = OAuth.useToken token []
         , withCredentials = False
-        , url = Url.toString (url instance Api.favouriteTimeline)
+        , url = Url.toString (instanceUrl instance Api.favouriteTimeline)
         , expect = Http.expectJson decoder
         , timeout = Nothing
         }

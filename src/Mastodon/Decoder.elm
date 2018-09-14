@@ -1,14 +1,64 @@
-module Mastodon.Decoder exposing (accountDecoder, applicationDecoder, attachmentDecoder, idDecoder, mentionDecoder, reblogDecoder, statusDecoder, statusIdDecoder, tagDecoder)
+module Mastodon.Decoder exposing
+    ( accountDecoder
+    , appRegistrationDecoder
+    , applicationDecoder
+    , attachmentDecoder
+    , idDecoder
+    , mentionDecoder
+    , reblogDecoder
+    , resumeAppRegistrationDecoder
+    , statusDecoder
+    , statusIdDecoder
+    , tagDecoder
+    )
 
 import Iso8601
 import Json.Decode as Decode exposing (Decoder, bool, int, string)
 import Json.Decode.Pipeline exposing (hardcoded, optional, required)
-import Type exposing (Account, Application, Attachment, Mention, Reblog(..), Status, StatusId(..), Tag)
+import Type exposing (Account, AppRegistration, Application, Attachment, Instance, Mention, Reblog(..), Scope, Status, StatusId(..), Tag)
+import Url exposing (Url)
+
+
+urlDecoder : Decoder Url
+urlDecoder =
+    Decode.string
+        |> Decode.andThen
+            (\str ->
+                case Url.fromString str of
+                    Just a ->
+                        Decode.succeed a
+
+                    Nothing ->
+                        Decode.fail "Unable to decode url"
+            )
+
+
+resumeAppRegistrationDecoder : Url -> Decoder AppRegistration
+resumeAppRegistrationDecoder url =
+    Decode.succeed AppRegistration
+        |> required "instance" Decode.string
+        |> required "scope" Decode.string
+        |> required "clientId" Decode.string
+        |> required "clientSecret" Decode.string
+        |> required "id" idDecoder
+        |> hardcoded url
+
+
+appRegistrationDecoder : Instance -> Scope -> Decoder AppRegistration
+appRegistrationDecoder server scope =
+    Decode.succeed AppRegistration
+        |> hardcoded server
+        |> hardcoded scope
+        |> required "client_id" Decode.string
+        |> required "client_secret" Decode.string
+        |> required "id" idDecoder
+        |> required "redirect_uri" urlDecoder
 
 
 idDecoder : Decoder String
 idDecoder =
     Decode.string
+
 
 accountDecoder : Decoder Account
 accountDecoder =

@@ -1,4 +1,4 @@
-module Page.SignIn exposing (configuration, view, viewFetching, viewSignInButton)
+module Page.SignIn exposing (view, viewFetching, viewSignInButton)
 
 import Browser.Navigation as Navigation exposing (Key)
 import Css exposing (..)
@@ -13,7 +13,7 @@ import OAuth
 import OAuth.AuthorizationCode
 import Skeleton
 import Theme exposing (Theme)
-import Type exposing (Account, Auth, OAuthConfiguration)
+import Type exposing (Account, Auth, Instance, OAuthConfiguration)
 import Url exposing (Protocol(..), Url)
 
 
@@ -95,12 +95,12 @@ viewError theme error =
                 ]
 
 
-viewSignInButton : Auth -> (String -> msg) -> Attribute msg -> Html msg
-viewSignInButton auth setInstanceMsg onSignIn =
+viewSignInButton : Instance -> (String -> msg) -> Attribute msg -> Html msg
+viewSignInButton instance setInstanceMsg onSignIn =
     div
         []
         [ div []
-            [ viewInput "text" "Instance" auth.instance setInstanceMsg
+            [ viewInput "text" "Instance" instance setInstanceMsg
             , button
                 [ css
                     [ borderRadius (pct 0)
@@ -138,25 +138,3 @@ viewInput t p v toMsg =
         , onInput toMsg
         ]
         []
-
-
-configuration : OAuthConfiguration
-configuration =
-    let
-        defaultHttpsUrl =
-            { protocol = Https
-            , host = ""
-            , path = ""
-            , port_ = Nothing
-            , query = Nothing
-            , fragment = Nothing
-            }
-    in
-    { clientId = "gxEufHWdQkhfvxkaRpvTRgCQFoOa03_OusYy5_uzBMw="
-    , clientSecret = "N8JGmR3_-IT6y9-DQE_13t5DQlUYjJKTx2GEsQt0IXc="
-    , authorizationEndpoint = { defaultHttpsUrl | path = Mastodon.Url.oauthAuthorize }
-    , tokenEndpoint = { defaultHttpsUrl | path = Mastodon.Url.oauthToken }
-    , accountEndpoint = { defaultHttpsUrl | path = Mastodon.Url.userAccount }
-    , scope = [ "read", "write", "follow" ]
-    , accountDecoder = accountDecoder
-    }

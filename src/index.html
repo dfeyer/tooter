@@ -56,10 +56,12 @@
     });
 
     const clients = localStorage.getItem("tooter.clients") || "[]";
+    const registration = localStorage.getItem("tooter.registration") || "";
 
     const flags = {
         randomBytes,
-        clients
+        clients,
+        registration
     };
 
     console.log(flags);
