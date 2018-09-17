@@ -4,6 +4,7 @@ module Type exposing
     , Application
     , Aside
     , Attachment
+    , AttachmentType(..)
     , Auth
     , Client
     , ClientId
@@ -36,6 +37,7 @@ import Url exposing (Protocol(..), Url)
 
 
 --- TYPES
+
 
 type Error
     = InvalidToken String
@@ -194,10 +196,17 @@ type alias Mention =
     }
 
 
+type AttachmentType
+    = Image
+    | Video
+    | GifV
+    | InvalidAttachment
+
+
 type alias Attachment =
     -- type_: -- "image", "video", "gifv"
     { id : String
-    , type_ : String
+    , type_ : AttachmentType
     , url : String
     , remote_url : String
     , preview_url : String

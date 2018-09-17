@@ -22,7 +22,6 @@ import Skeleton
 import Theme exposing (Theme)
 import Type exposing (Account, Auth, Client, Status)
 import View.Account as Account
-import View.Status exposing (view)
 import View.WhoToFollow as WhoToFollow
 import View.Zone as Zone
 

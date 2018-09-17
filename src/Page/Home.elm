@@ -24,7 +24,7 @@ import Skeleton exposing (Segment(..))
 import Theme exposing (Theme)
 import Type exposing (Account, Auth, Client, Status, Timeline)
 import View.Account as Account
-import View.Status as Status
+import Mastodon.View.Status as Status
 import View.WhoToFollow as WhoToFollow
 import View.Zone as Zone
 

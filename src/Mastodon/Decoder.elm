@@ -14,7 +14,7 @@ module Mastodon.Decoder exposing
 import Iso8601
 import Json.Decode as Decode exposing (Decoder, bool, int, string)
 import Json.Decode.Pipeline exposing (hardcoded, optional, required)
-import Type exposing (Account, AppRegistration, Application, Attachment, Instance, Mention, Reblog(..), Scope, Status, StatusId(..), Tag)
+import Type exposing (Account, AppRegistration, Application, Attachment, AttachmentType(..), Instance, Mention, Reblog(..), Scope, Status, StatusId(..), Tag)
 import Url exposing (Url)
 
 
@@ -78,11 +78,31 @@ statusIdDecoder =
     idDecoder |> Decode.map StatusId
 
 
+attachmentTypeDecoder : Decoder AttachmentType
+attachmentTypeDecoder =
+    Decode.string
+        |> Decode.andThen
+            (\str ->
+                case str of
+                    "image" ->
+                        Decode.succeed Image
+
+                    "video" ->
+                        Decode.succeed Video
+
+                    "gifv" ->
+                        Decode.succeed GifV
+
+                    _ ->
+                        Decode.succeed InvalidAttachment
+            )
+
+
 attachmentDecoder : Decode.Decoder Attachment
 attachmentDecoder =
     Decode.succeed Attachment
         |> required "id" idDecoder
-        |> required "type" Decode.string
+        |> required "type" attachmentTypeDecoder
         |> required "url" Decode.string
         |> optional "remote_url" Decode.string ""
         |> required "preview_url" Decode.string

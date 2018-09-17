@@ -21,6 +21,7 @@ import Json.Encode as Encode
 import Mastodon.Decoder exposing (accountDecoder, appRegistrationDecoder)
 import Mastodon.Encoder exposing (accountEncoder, appRegistrationEncoder)
 import Mastodon.Url as Api
+import Mastodon.OAuth exposing (initOAuthConfiguration)
 import OAuth exposing (Token)
 import OAuth.AuthorizationCode
 import Page.Create as CreatePage
@@ -237,27 +238,6 @@ init { randomBytes, clients, registration } url key =
         , auth = auth
         , appRegistration = appRegistration
         }
-
-
-initOAuthConfiguration : Url -> OAuthConfiguration
-initOAuthConfiguration url =
-    let
-        defaultHttpsUrl =
-            { protocol = Https
-            , host = ""
-            , port_ = Nothing
-            , path = ""
-            , query = Nothing
-            , fragment = Nothing
-            }
-    in
-    { authorizationEndpoint = { defaultHttpsUrl | path = Api.oauthAuthorize }
-    , tokenEndpoint = { defaultHttpsUrl | path = Api.oauthToken }
-    , accountEndpoint = { defaultHttpsUrl | path = Api.userAccount }
-    , scope = [ "read", "write", "follow" ]
-    , accountDecoder = accountDecoder
-    , redirectUri = { url | query = Nothing, fragment = Nothing }
-    }
 
 
 

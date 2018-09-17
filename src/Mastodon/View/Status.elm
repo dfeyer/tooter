@@ -1,4 +1,4 @@
-module View.Status exposing (view, viewTimeline)
+module Mastodon.View.Status exposing (view, viewTimeline)
 
 import Css exposing (..)
 import Css.Transitions exposing (easeInOut, transition)
@@ -54,7 +54,7 @@ statusContent : Theme -> String -> List Mention -> Html msg
 statusContent theme content mentions =
     div
         [ css
-            [ marginTop (rem 0.25) ]
+            [ fontSize (rem 1.2), lineHeight (num 1.2), marginTop (rem 0.25) ]
         ]
         (formatContent content mentions)
 
