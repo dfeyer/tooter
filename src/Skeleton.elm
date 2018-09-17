@@ -6,7 +6,7 @@ import Css.Transitions exposing (easeInOut, transition)
 import Document exposing (Document)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (class, css, href, id)
-import Html.Styled.Lazy exposing (lazy)
+import Html.Styled.Lazy exposing (lazy, lazy2)
 import Theme exposing (Palette, Theme)
 import Toolbar exposing (circularIconLink, iconLink, inversedIconLink, majorIconLink, navigationLink)
 import Type exposing (Aside, Sidebar)
@@ -81,10 +81,10 @@ view toMsg { title, theme, warning, navigation, styles, kids } =
                 ]
             ]
             [ lazy viewWarning warning
-            , viewHeader theme navigation
+            , lazy2 viewHeader theme navigation
             , Html.Styled.map toMsg <|
                 div (id "main" :: [ css styles ]) kids
-            , viewFooter theme
+            , lazy viewFooter theme
             ]
         ]
     }
@@ -196,8 +196,8 @@ viewHeader theme nav =
         , content =
             case nav of
                 Just { main, secondary } ->
-                    [ viewMainNavigation theme main
-                    , viewSecondaryNavigation theme secondary
+                    [ viewNavigation theme main
+                    , viewNavigation theme secondary
                     ]
 
                 Nothing ->
@@ -239,51 +239,13 @@ viewNavigationItems theme nav =
             )
 
 
-viewMainNavigation : Theme -> List Segment -> Html msg
-viewMainNavigation theme nav =
-    let
-        n =
-            navigationLink theme
-    in
+viewNavigation : Theme -> List Segment -> Html msg
+viewNavigation theme nav =
     div
         [ css
             [ displayFlex ]
         ]
-        (nav
-            |> List.map
-                (\item ->
-                    case item of
-                        LinkWithIcon label url iconName ->
-                            n url label iconName
-
-                        _ ->
-                            text ""
-                )
-        )
-
-
-viewSecondaryNavigation : Theme -> List Segment -> Html msg
-viewSecondaryNavigation theme nav =
-    let
-        n =
-            iconLink theme
-
-        nm =
-            majorIconLink theme
-
-        nc =
-            circularIconLink theme
-    in
-    div
-        [ css
-            [ displayFlex ]
-        ]
-        [ n "/inbox" "Direct Messages" "email-unread"
-        , nm "/search" "Search" "search"
-        , nc "/create" "Create" "flash"
-        , n "/lock" "Lock" "android-lock"
-        ]
-
+        (viewNavigationItems theme nav)
 
 
 -- VIEW FOOTER

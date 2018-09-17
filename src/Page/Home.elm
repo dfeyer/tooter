@@ -12,6 +12,7 @@ import Css exposing (..)
 import Css.Transitions exposing (easeInOut, transition)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, href, src)
+import Html.Styled.Lazy exposing (lazy2)
 import Icon exposing (icon)
 import Image exposing (accountImage, circularAccountImage)
 import Json.Decode as Decode
@@ -128,7 +129,7 @@ viewContent theme { client, timeline } =
             [ displayFlex
             ]
         ]
-        [ Zone.sidebar theme (Account.view theme client.account)
-        , Zone.mainArea theme (Status.viewTimeline theme timeline)
-        , Zone.aside theme (WhoToFollow.view theme client.account)
+        [ lazy2 Zone.sidebar theme (Account.view theme client.account)
+        , lazy2 Zone.mainArea theme (Status.viewTimeline theme timeline)
+        , lazy2 Zone.aside theme (WhoToFollow.view theme client.account)
         ]
