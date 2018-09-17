@@ -1,4 +1,4 @@
-module View.Zone exposing (mainArea, sidebar, aside, full)
+module View.Zone exposing (aside, full, mainArea, sidebar)
 
 import Css exposing (..)
 import Css.Transitions exposing (easeInOut, transition)
@@ -45,11 +45,12 @@ aside { layout } content =
         ]
         content
 
+
 full : Theme -> List (Html msg) -> Html msg
 full { layout } content =
-     div
-         [ css
-             [ paddingLeft layout.defaultMargin
-             ]
-         ]
-         content
+    div
+        [ css
+            [ paddingLeft layout.defaultMargin
+            ]
+        ]
+        content

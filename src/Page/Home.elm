@@ -19,7 +19,7 @@ import Mastodon.Decoder exposing (statusDecoder)
 import OAuth exposing (Token)
 import RemoteData exposing (RemoteData(..), WebData)
 import Request.Timeline exposing (..)
-import Skeleton
+import Skeleton exposing (Segment(..))
 import Theme exposing (Theme)
 import Type exposing (Account, Auth, Client, Status, Timeline)
 import View.Account as Account
@@ -108,12 +108,12 @@ update msg model =
 view : Model -> Theme -> Skeleton.Details Msg
 view model theme =
     { title = "🌎 " ++ model.title ++ " / Tooter"
-    , header = []
+    , navigation = Nothing
     , warning = Skeleton.NoProblems
     , kids = [ viewContent theme model ]
     , sidebar = []
     , aside = []
-    , css =
+    , styles =
         [ minHeight (vh 100)
         , paddingTop (rem 2.5)
         ]

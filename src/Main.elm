@@ -1,10 +1,12 @@
 module Main exposing (Msg(..), main, update, view)
 
+import AppRegistration
 import Base64
 import Browser
 import Browser.Navigation as Nav exposing (Key, pushUrl)
+import Client
 import Css exposing (maxWidth, pct, rem, width)
-import Decoder exposing (clientListDecoder, tokenDecoder)
+import Decoder exposing (tokenDecoder)
 import Document exposing (Document, toUnstyledDocument)
 import Html
 import Html.Styled exposing (Html, button, div, text, toUnstyled)
@@ -16,8 +18,8 @@ import Iso8601
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (required)
 import Json.Encode as Encode
-import Mastodon.Decoder exposing (accountDecoder, appRegistrationDecoder, resumeAppRegistrationDecoder)
-import Mastodon.Encoder exposing (accountEncoder, appRegistrationEncoder, saveAppRegistrationEncoder)
+import Mastodon.Decoder exposing (accountDecoder, appRegistrationDecoder)
+import Mastodon.Encoder exposing (accountEncoder, appRegistrationEncoder)
 import Mastodon.Url as Api
 import OAuth exposing (Token)
 import OAuth.AuthorizationCode
@@ -32,7 +34,7 @@ import Page.SignIn as SignInPage
 import Page.SignIn.Error as SignInPageError
 import Ports
 import Request.Timeline exposing (instanceUrl)
-import Skeleton exposing (Details)
+import Skeleton exposing (Details, Navigation, Segment(..))
 import Theme exposing (Palette, Theme, createTheme)
 import Type exposing (Account, AppRegistration, Auth, Client, Instance, OAuthConfiguration, initAuth, resumeAuth)
 import Url exposing (Protocol(..), Url)
@@ -93,74 +95,96 @@ subscriptions model =
 -- VIEW
 
 
+defaultNavigation : Maybe Navigation
+defaultNavigation =
+    Just
+        { main =
+            [ LinkWithIcon "Home" "/" "home"
+            , LinkWithIcon "Local" "/local" "paper-airplane"
+            , LinkWithIcon "Federated" "/federated" "planet"
+            , LinkWithIcon "Favorites" "/favorites" "star"
+            , LinkWithIcon "Notifications" "/notifications" "ios-bell"
+            ]
+        , secondary =
+            [ LinkWithIconOnly "Direct Messages" "/inbox" "email-unread"
+            , LinkWithMajorIconOnly "Search" "/search" "search"
+            , LinkWithCircularIconOnly "Create" "/create" "flash"
+            , LinkWithIconOnly "Lock" "/lock" "android-lock"
+            ]
+        }
+
+
 view : Model -> Browser.Document Msg
 view ({ auth, theme, appRegistration } as model) =
-    case model.page of
-        NotFound ->
-            toUnstyledDocument <|
+    toUnstyledDocument <|
+        case model.page of
+            NotFound ->
                 Skeleton.minimalView
                     { title = "Not Found"
-                    , header = []
+                    , navigation = Nothing
                     , warning = Skeleton.NoProblems
                     , kids = ProblemPage.notFound theme
                     , sidebar = []
                     , aside = []
-                    , css = []
+                    , styles = []
                     , theme = theme
                     }
 
-        SignIn ->
-            toUnstyledDocument <|
+            SignIn ->
                 Skeleton.minimalView
                     { title = "🌎 SignIn on Tooter"
-                    , header = []
+                    , navigation = Nothing
                     , warning = Skeleton.NoProblems
                     , kids =
                         [ signInView theme (Maybe.withDefault "" model.currentInstance) auth
                         ]
                     , sidebar = []
                     , aside = []
-                    , css = []
+                    , styles = []
                     , theme = theme
                     }
 
-        Fetching ->
-            toUnstyledDocument <|
+            Fetching ->
                 Skeleton.minimalView
                     { title = "🌎 Fetching account..."
-                    , header = []
+                    , navigation = Nothing
                     , warning = Skeleton.NoProblems
                     , kids =
                         [ SignInPage.viewFetching theme ]
                     , sidebar = []
                     , aside = []
-                    , css = []
+                    , styles = []
                     , theme = theme
                     }
 
-        Create create ->
-            toUnstyledDocument <|
-                Skeleton.view CreateMsg (CreatePage.view create theme)
+            Create create ->
+                overrideNavigation (CreatePage.view create theme) defaultNavigation
+                    |> Skeleton.view CreateMsg
 
-        Home home ->
-            toUnstyledDocument <|
-                Skeleton.view HomeMsg (HomePage.view home theme)
+            Home home ->
+                overrideNavigation (HomePage.view home theme) defaultNavigation
+                    |> Skeleton.view HomeMsg
 
-        Inbox inbox ->
-            toUnstyledDocument <|
-                Skeleton.view InboxMsg (InboxPage.view inbox theme)
+            Inbox inbox ->
+                overrideNavigation (InboxPage.view inbox theme) defaultNavigation
+                    |> Skeleton.view InboxMsg
 
-        Lock lock ->
-            toUnstyledDocument <|
-                Skeleton.view LockMsg (LockPage.view lock theme)
+            Lock lock ->
+                overrideNavigation (LockPage.view lock theme) defaultNavigation
+                    |> Skeleton.view LockMsg
 
-        Notification notification ->
-            toUnstyledDocument <|
-                Skeleton.view NotificationMsg (NotificationPage.view notification theme)
+            Notification notification ->
+                overrideNavigation (NotificationPage.view notification theme) defaultNavigation
+                    |> Skeleton.view NotificationMsg
 
-        Search search ->
-            toUnstyledDocument <|
-                Skeleton.view SearchMsg (SearchPage.view search theme)
+            Search search ->
+                overrideNavigation (SearchPage.view search theme) defaultNavigation
+                    |> Skeleton.view SearchMsg
+
+
+overrideNavigation : Details msg -> Maybe Navigation -> Details msg
+overrideNavigation details nav =
+    { details | navigation = nav }
 
 
 signInView : Theme -> Instance -> Auth -> Html Msg
@@ -178,56 +202,14 @@ signInView theme instance auth =
 -- INIT
 
 
-type Error
-    = InvalidToken String
-    | InvalidAppRegistration String
-
-
-resumeClient : String -> Result Error (Maybe Client)
-resumeClient clients =
-    case Base64.decode clients of
-        Ok clients_ ->
-            case Decode.decodeString clientListDecoder clients_ of
-                Ok list ->
-                    -- This a workaround to get the first client only
-                    -- we can change this later when we implement
-                    -- multiple instance support
-                    Ok (list |> List.head)
-
-                Err _ ->
-                    Err (InvalidToken "Unable to parse stored account and token")
-
-        Err _ ->
-            Err (InvalidToken "Unable to decode stored account and token")
-
-
-resumeRegistration : Url -> String -> Result Error (Maybe AppRegistration)
-resumeRegistration url r =
-    if r == "" then
-        Ok Nothing
-    else
-        case Base64.decode r of
-            Ok r_ ->
-                case
-                    Decode.decodeString (resumeAppRegistrationDecoder url) r_
-                of
-                    Ok a ->
-                        Ok (Just a)
-
-                    Err _ ->
-                        Err (InvalidAppRegistration "Unable to parse stored app registration")
-
-            Err _ ->
-                Err (InvalidAppRegistration "Unable to decode stored app registration")
-
-
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init { randomBytes, clients, registration } url key =
     let
         appRegistration =
-            case (resumeRegistration { url | path = "", query = Nothing, fragment = Nothing } registration) of
+            case AppRegistration.resume { url | path = "", query = Nothing, fragment = Nothing } registration of
                 Ok a ->
                     a
+
                 Err _ ->
                     Nothing
 
@@ -235,7 +217,7 @@ init { randomBytes, clients, registration } url key =
             initOAuthConfiguration url
 
         auth =
-            case resumeClient clients of
+            case Client.resume clients of
                 Ok maybeClient ->
                     case maybeClient of
                         Just a ->
@@ -382,7 +364,10 @@ update message ({ auth, appRegistration } as model) =
 
         SignOutRequested ->
             ( model
-            , Nav.load (Url.toString auth.configuration.redirectUri)
+            , Cmd.batch
+                [ Nav.load (Url.toString auth.configuration.redirectUri)
+                , AppRegistration.delete
+                ]
             )
 
         SetInstance value ->
@@ -407,7 +392,7 @@ update message ({ auth, appRegistration } as model) =
                 Ok ({ clientId, redirectUri, scope, instance } as a) ->
                     ( { model | appRegistration = Just a }
                     , Cmd.batch
-                        [ saveAppRegistration a
+                        [ AppRegistration.save a
                         , { clientId = clientId
                           , url = { authorizationEndpoint | host = instance }
                           , redirectUri = redirectUri
@@ -470,7 +455,7 @@ update message ({ auth, appRegistration } as model) =
                         [ pushUrl model.key "/"
                         , case auth.token of
                             Just token ->
-                                saveClients [ Client instance token account ]
+                                Client.save [ Client instance token account ]
 
                             _ ->
                                 Cmd.none
@@ -571,41 +556,6 @@ getAccessToken { instance, clientId, clientSecret, redirectUri } ({ tokenEndpoin
                 , url = { tokenEndpoint | host = instance }
                 , redirectUri = redirectUri
                 }
-
-
-
--- CLIENT
-
-
-saveClients : List Client -> Cmd Msg
-saveClients clients =
-    clients
-        |> List.map clientEncoder
-        |> Encode.list identity
-        |> toJson
-        |> Base64.encode
-        |> Ports.saveClients
-
-
-clientEncoder : Client -> Encode.Value
-clientEncoder client =
-    Encode.object
-        [ ( "instance", Encode.string client.instance )
-        , ( "token", OAuth.tokenToString client.token |> Encode.string )
-        , ( "account", accountEncoder client.account )
-        ]
-
-
-
--- APP REGISTRATION
-
-
-saveAppRegistration : AppRegistration -> Cmd Msg
-saveAppRegistration registration =
-    saveAppRegistrationEncoder registration
-        |> toJson
-        |> Base64.encode
-        |> Ports.saveRegistration
 
 
 
@@ -810,8 +760,3 @@ stepSearch model ( search, cmds ) =
     ( { model | page = Search search }
     , Cmd.map SearchMsg cmds
     )
-
-
-toJson : Encode.Value -> String
-toJson =
-    Encode.encode 0

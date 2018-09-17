@@ -28,6 +28,7 @@ view theme { account, content, mentions } =
             ]
         ]
 
+
 viewTimeline : Theme -> Timeline -> List (Html msg)
 viewTimeline theme timeline =
     [ case timeline of
@@ -41,11 +42,13 @@ viewTimeline theme timeline =
             div [] [ text "Oups... something bad happens. We are sorry, but not perfect. Maybe try again?" ]
 
         Success list ->
-            if (List.isEmpty list) then
+            if List.isEmpty list then
                 div [] [ text "Nothing to show..." ]
+
             else
                 div [] (List.map (view theme) list)
     ]
+
 
 statusContent : Theme -> String -> List Mention -> Html msg
 statusContent theme content mentions =

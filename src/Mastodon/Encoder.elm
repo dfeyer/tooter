@@ -1,4 +1,4 @@
-module Mastodon.Encoder exposing (accountEncoder, appRegistrationEncoder, saveAppRegistrationEncoder)
+module Mastodon.Encoder exposing (accountEncoder, appRegistrationEncoder)
 
 import Iso8601
 import Json.Decode as Decode exposing (Decoder)
@@ -15,17 +15,6 @@ appRegistrationEncoder clientName redirectUris scope website =
         , ( "redirect_uris", Encode.string (Url.toString redirectUris) )
         , ( "scopes", Encode.string scope )
         , ( "website", Encode.string website )
-        ]
-
-
-saveAppRegistrationEncoder : AppRegistration -> Encode.Value
-saveAppRegistrationEncoder registration =
-    Encode.object
-        [ ( "instance", Encode.string registration.instance )
-        , ( "scope", Encode.string registration.scope )
-        , ( "clientId", Encode.string registration.clientId )
-        , ( "clientSecret", Encode.string registration.clientSecret )
-        , ( "id", Encode.string registration.id )
         ]
 
 

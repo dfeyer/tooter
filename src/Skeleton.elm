@@ -1,4 +1,4 @@
-module Skeleton exposing (Details, Segment, Warning(..), minimalView, view)
+module Skeleton exposing (Details, Navigation, Segment(..), Warning(..), minimalView, view)
 
 import Browser
 import Css exposing (..)
@@ -16,11 +16,17 @@ import Type exposing (Aside, Sidebar)
 -- NODE
 
 
+type alias Navigation =
+    { main : List Segment
+    , secondary : List Segment
+    }
+
+
 type alias Details msg =
     { title : String
-    , header : List Segment
+    , navigation : Maybe Navigation
     , warning : Warning
-    , css : List Style
+    , styles : List Style
     , kids : List (Html msg)
     , sidebar : Sidebar msg
     , aside : Aside msg
@@ -32,9 +38,25 @@ type alias Details msg =
 -- SEGMENT
 
 
+type alias SegmentLabel =
+    String
+
+
+type alias SegmentUrl =
+    String
+
+
+type alias SegmentIcon =
+    String
+
+
 type Segment
-    = Text String
-    | Link String String
+    = Text SegmentLabel
+    | Link SegmentLabel SegmentUrl
+    | LinkWithIcon SegmentLabel SegmentUrl SegmentIcon
+    | LinkWithIconOnly SegmentLabel SegmentUrl SegmentIcon
+    | LinkWithMajorIconOnly SegmentLabel SegmentUrl SegmentIcon
+    | LinkWithCircularIconOnly SegmentLabel SegmentUrl SegmentIcon
 
 
 type Warning
@@ -46,32 +68,32 @@ type Warning
 
 
 view : (a -> msg) -> Details a -> Document msg
-view toMsg details =
+view toMsg { title, theme, warning, navigation, styles, kids } =
     { title =
-        details.title
+        title
     , body =
         [ div
             [ id "app"
             , css
                 [ maxWidth (rem 75)
                 , margin2 (rem 0) (rem 4)
-                , backgroundColor details.theme.colors.appBackground
+                , backgroundColor theme.colors.appBackground
                 ]
             ]
-            [ lazy viewWarning details.warning
-            , viewHeader details.header details.theme
+            [ lazy viewWarning warning
+            , viewHeader theme navigation
             , Html.Styled.map toMsg <|
-                div (id "main" :: [ css details.css ]) details.kids
-            , viewFooter details.theme
+                div (id "main" :: [ css styles ]) kids
+            , viewFooter theme
             ]
         ]
     }
 
 
 minimalView : Details msg -> Document msg
-minimalView details =
+minimalView { title, theme, warning, navigation, styles, kids } =
     { title =
-        details.title
+        title
     , body =
         [ div
             [ id "app"
@@ -80,9 +102,9 @@ minimalView details =
                 , maxWidth (pct 75)
                 ]
             ]
-            [ lazy viewWarning details.warning
-            , viewMinimalHeader details.header details.theme
-            , div (id "main" :: [ css details.css ]) details.kids
+            [ lazy viewWarning warning
+            , viewMinimalHeader theme
+            , div (id "main" :: [ css styles ]) kids
             ]
         ]
     }
@@ -104,8 +126,8 @@ viewWarning warning =
 -- VIEW HEADER
 
 
-headerWrapper : List Segment -> Theme -> { logo : List (Html msg), navigation : List (Html msg) } -> Html msg
-headerWrapper segments theme { logo, navigation } =
+headerWrapper : Theme -> { logo : List (Html msg), content : List (Html msg) } -> Html msg
+headerWrapper theme { logo, content } =
     let
         ni =
             inversedIconLink theme
@@ -141,7 +163,7 @@ headerWrapper segments theme { logo, navigation } =
                 , fontSize (rem 1.4)
                 ]
             ]
-            navigation
+            content
         ]
 
 
@@ -159,38 +181,66 @@ viewLogo theme =
         [ text "Tooter" ]
 
 
-viewHeader : List Segment -> Theme -> Html msg
-viewHeader segments theme =
+viewHeader : Theme -> Maybe Navigation -> Html msg
+viewHeader theme nav =
     let
         ni =
             inversedIconLink theme
     in
-    headerWrapper segments
+    headerWrapper
         theme
         { logo =
             [ viewLogo theme
             , div [ css [ marginLeft auto ] ] [ ni "/panel" "Menu" "menu" ]
             ]
-        , navigation =
-            [ viewTimelineNavigation theme
-            , viewAdvancedNavigation theme
-            ]
+        , content =
+            case nav of
+                Just { main, secondary } ->
+                    [ viewMainNavigation theme main
+                    , viewSecondaryNavigation theme secondary
+                    ]
+
+                Nothing ->
+                    []
         }
 
 
-viewMinimalHeader : List Segment -> Theme -> Html msg
-viewMinimalHeader segments theme =
-    headerWrapper segments
+viewMinimalHeader : Theme -> Html msg
+viewMinimalHeader theme =
+    headerWrapper
         theme
         { logo =
             [ viewLogo theme
             ]
-        , navigation = [ div [ css [ marginLeft (rem 1), fontSize (rem 1.35) ] ] [ text "A web client for your favorits Mastodon instances" ] ]
+        , content = [ div [ css [ marginLeft (rem 1), fontSize (rem 1.35) ] ] [ text "A web client for your favorits Mastodon instances" ] ]
         }
 
 
-viewTimelineNavigation : Theme -> Html msg
-viewTimelineNavigation theme =
+viewNavigationItems : Theme -> List Segment -> List (Html msg)
+viewNavigationItems theme nav =
+    nav
+        |> List.map
+            (\item ->
+                case item of
+                    LinkWithIcon label url iconName ->
+                        navigationLink theme url label iconName
+
+                    LinkWithIconOnly label url iconName ->
+                        iconLink theme url label iconName
+
+                    LinkWithMajorIconOnly label url iconName ->
+                        majorIconLink theme url label iconName
+
+                    LinkWithCircularIconOnly label url iconName ->
+                        circularIconLink theme url label iconName
+
+                    _ ->
+                        text ""
+            )
+
+
+viewMainNavigation : Theme -> List Segment -> Html msg
+viewMainNavigation theme nav =
     let
         n =
             navigationLink theme
@@ -199,16 +249,21 @@ viewTimelineNavigation theme =
         [ css
             [ displayFlex ]
         ]
-        [ n "/" "Home" "home"
-        , n "/local" "Local" "paper-airplane"
-        , n "/federated" "Federated" "planet"
-        , n "/favorites" "Favorites" "star"
-        , n "/notifications" "Notifications" "ios-bell"
-        ]
+        (nav
+            |> List.map
+                (\item ->
+                    case item of
+                        LinkWithIcon label url iconName ->
+                            n url label iconName
+
+                        _ ->
+                            text ""
+                )
+        )
 
 
-viewAdvancedNavigation : Theme -> Html msg
-viewAdvancedNavigation theme =
+viewSecondaryNavigation : Theme -> List Segment -> Html msg
+viewSecondaryNavigation theme nav =
     let
         n =
             iconLink theme

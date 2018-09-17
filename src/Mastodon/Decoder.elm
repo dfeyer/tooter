@@ -6,7 +6,6 @@ module Mastodon.Decoder exposing
     , idDecoder
     , mentionDecoder
     , reblogDecoder
-    , resumeAppRegistrationDecoder
     , statusDecoder
     , statusIdDecoder
     , tagDecoder
@@ -31,17 +30,6 @@ urlDecoder =
                     Nothing ->
                         Decode.fail "Unable to decode url"
             )
-
-
-resumeAppRegistrationDecoder : Url -> Decoder AppRegistration
-resumeAppRegistrationDecoder url =
-    Decode.succeed AppRegistration
-        |> required "instance" Decode.string
-        |> required "scope" Decode.string
-        |> required "clientId" Decode.string
-        |> required "clientSecret" Decode.string
-        |> required "id" idDecoder
-        |> hardcoded url
 
 
 appRegistrationDecoder : Instance -> Scope -> Decoder AppRegistration

@@ -21,7 +21,6 @@ import Request.Timeline exposing (homeTimeline)
 import Skeleton
 import Theme exposing (Theme)
 import Type exposing (Account, Auth, Client, Status)
-import View.Status exposing (view)
 import View.Account as Account
 import View.Status exposing (view)
 import View.WhoToFollow as WhoToFollow
@@ -68,12 +67,12 @@ update msg model =
 view : Model -> Theme -> Skeleton.Details Msg
 view model theme =
     { title = "🌎 " ++ model.title ++ " / Tooter"
-    , header = []
+    , navigation = Nothing
     , warning = Skeleton.NoProblems
     , kids = [ viewContent theme model ]
     , sidebar = []
     , aside = []
-    , css =
+    , styles =
         [ minHeight (vh 100)
         , paddingTop (rem 2.5)
         ]

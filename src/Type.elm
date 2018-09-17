@@ -8,14 +8,15 @@ module Type exposing
     , Client
     , ClientId
     , ClientSecret
+    , Error(..)
     , InputInformation
     , Instance
     , Mention
     , OAuthConfiguration
     , Reblog(..)
+    , Scope
     , Sidebar
     , Status
-    , Scope
     , StatusId(..)
     , Tag
     , Timeline
@@ -25,10 +26,9 @@ module Type exposing
 
 import Browser.Navigation as Nav exposing (Key)
 import Html.Styled exposing (Html)
-import Json.Decode as Json
+import Json.Decode as Json exposing (Decoder)
 import OAuth exposing (Token)
 import RemoteData exposing (WebData)
-import Json.Decode exposing (Decoder)
 import Theme exposing (Theme)
 import Time exposing (Posix)
 import Url exposing (Protocol(..), Url)
@@ -37,8 +37,14 @@ import Url exposing (Protocol(..), Url)
 
 --- TYPES
 
+type Error
+    = InvalidToken String
+    | InvalidAppRegistration String
+
+
 type alias Scope =
     String
+
 
 type alias ClientId =
     String

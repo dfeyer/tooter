@@ -1,4 +1,4 @@
-module Decoder exposing (tokenDecoder, clientDecoder, clientListDecoder)
+module Decoder exposing (tokenDecoder)
 
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (required)
@@ -20,15 +20,3 @@ tokenDecoder =
                     Nothing ->
                         Decode.fail "Unable to decode token"
             )
-
-clientDecoder : Decoder Client
-clientDecoder =
-    Decode.succeed Client
-        |> required "instance" Decode.string
-        |> required "token" tokenDecoder
-        |> required "account" accountDecoder
-
-
-clientListDecoder : Decoder (List Client)
-clientListDecoder =
-    Decode.list clientDecoder
