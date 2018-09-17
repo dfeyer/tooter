@@ -56,13 +56,13 @@
     });
 
     const clients = localStorage.getItem("tooter.clients") || "[]";
+    const registration = localStorage.getItem("tooter.registration") || "";
 
     const flags = {
         randomBytes,
-        clients
+        clients,
+        registration
     };
-
-    console.log(flags);
 
     const app = Elm.Main.init({
         node: document.getElementById("tooter"),
@@ -77,7 +77,7 @@
         localStorage.setItem("tooter.registration", json);
     });
 
-    app.ports.deleteRegistration.subscribe(json => {
+    app.ports.deleteRegistration.subscribe(() => {
         localStorage.removeItem("tooter.registration");
     });
 
