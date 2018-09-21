@@ -103,7 +103,7 @@ defaultNavigation =
             [ LinkWithIcon "Home" "/" "home"
             , LinkWithIcon "Local" "/local" "paper-airplane"
             , LinkWithIcon "Federated" "/federated" "planet"
-            , LinkWithIcon "Favorites" "/favorites" "star"
+            , LinkWithIcon "Favourites" "/favourites" "star"
             , LinkWithIcon "Notifications" "/notifications" "ios-bell"
             ]
         , secondary =
@@ -585,12 +585,12 @@ protectedUrl url model token { instance } account =
                         account
                         FederatedTimeline
                     )
-                , route (s "favorites")
+                , route (s "favourites")
                     (goHome instance
                         model
                         token
                         account
-                        FavoritesTimeline
+                        FavouritesTimeline
                     )
                 , route (s "create")
                     (stepCreate

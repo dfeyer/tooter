@@ -16,7 +16,8 @@ import Html.Styled.Lazy exposing (lazy2)
 import Icon exposing (icon)
 import Image exposing (accountImage, circularAccountImage)
 import Json.Decode as Decode
-import Mastodon.Decoder exposing (statusDecoder)
+import Mastodon.Decoder exposing (timelineDecoder)
+import Mastodon.View.Status as Status
 import OAuth exposing (Token)
 import RemoteData exposing (RemoteData(..), WebData)
 import Request.Timeline exposing (..)
@@ -24,7 +25,6 @@ import Skeleton exposing (Segment(..))
 import Theme exposing (Theme)
 import Type exposing (Account, Auth, Client, Status, Timeline)
 import View.Account as Account
-import Mastodon.View.Status as Status
 import View.WhoToFollow as WhoToFollow
 import View.Zone as Zone
 
@@ -46,7 +46,7 @@ type TimelineMode
     = HomeTimeline
     | LocalTimeline
     | FederatedTimeline
-    | FavoritesTimeline
+    | FavouritesTimeline
 
 
 init : Key -> TimelineMode -> Client -> ( Model, Cmd Msg )
@@ -55,26 +55,24 @@ init key timelineMode ({ instance, token } as client) =
     , initCmd timelineMode client
     )
 
-
 initCmd : TimelineMode -> Client -> Cmd Msg
 initCmd mode { instance, token, account } =
-    let
-        decode =
-            Decode.list statusDecoder
-    in
-    Cmd.map TimelineUpdated <|
-        case mode of
-            HomeTimeline ->
-                accountTimeline instance token account decode
+    case mode of
+        HomeTimeline ->
+            Cmd.map AccountTimelineUpdated <|
+                accountTimeline instance token account timelineDecoder
 
-            LocalTimeline ->
-                publicTimeline instance token decode
+        LocalTimeline ->
+            Cmd.map PublicTimelineUpdated <|
+                publicTimeline instance token timelineDecoder
 
-            FederatedTimeline ->
-                homeTimeline instance token decode
+        FederatedTimeline ->
+            Cmd.map FederatedTimelineUpdated <|
+                homeTimeline instance token timelineDecoder
 
-            FavoritesTimeline ->
-                favouriteTimeline instance token decode
+        FavouritesTimeline ->
+            Cmd.map FavouritesTimelineUpdated <|
+                favouriteTimeline instance token timelineDecoder
 
 
 
@@ -84,7 +82,10 @@ initCmd mode { instance, token, account } =
 type Msg
     = NoOp
     | Navigate String
-    | TimelineUpdated (WebData (List Status))
+    | AccountTimelineUpdated (WebData (List Status))
+    | PublicTimelineUpdated (WebData (List Status))
+    | FederatedTimelineUpdated (WebData (List Status))
+    | FavouritesTimelineUpdated (WebData (List Status))
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
@@ -96,7 +97,22 @@ update msg model =
         Navigate href ->
             ( model, pushUrl model.key href )
 
-        TimelineUpdated timeline ->
+        AccountTimelineUpdated timeline ->
+            ( { model | timeline = timeline }
+            , Cmd.none
+            )
+
+        PublicTimelineUpdated timeline ->
+            ( { model | timeline = timeline }
+            , Cmd.none
+            )
+
+        FederatedTimelineUpdated timeline ->
+            ( { model | timeline = timeline }
+            , Cmd.none
+            )
+
+        FavouritesTimelineUpdated timeline ->
             ( { model | timeline = timeline }
             , Cmd.none
             )

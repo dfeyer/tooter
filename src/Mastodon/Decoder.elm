@@ -7,6 +7,7 @@ module Mastodon.Decoder exposing
     , mentionDecoder
     , reblogDecoder
     , statusDecoder
+    , timelineDecoder
     , statusIdDecoder
     , tagDecoder
     )
@@ -117,6 +118,9 @@ mentionDecoder =
         |> required "username" Decode.string
         |> required "acct" Decode.string
 
+timelineDecoder : Decoder (List Status)
+timelineDecoder =
+    Decode.list statusDecoder
 
 statusDecoder : Decoder Status
 statusDecoder =
